@@ -7,16 +7,19 @@ class Stage(object):
         self.time = 0
         self.stageNum = 0
         self.turnNum = 0
+        self.enemyCastle = None
+
         self.units = []
         self.enemies = []
         self.workers = []
         self.resources = {}
         self.nearestResouces = {}
 
-    def startTurn(self, time, stageNum, turnNum, units, enemies, resources):
+    def startTurn(self, time, stageNum, turnNum, resourceNum, units, enemies, resources):
         self.time = time
         self.stageNum = stageNum
         self.turnNum = turnNum
+        self.resourceNum = resourceNum
         self.units = units
         self.enemies = enemies
 
@@ -25,8 +28,10 @@ class Stage(object):
         self.productions = []
         self.forces = []
         self.bases = []
+        self.knights = []
         self.castle = None
         self.updateUnits()
+
 
         for resource in resources:
             if resource not in self.resources:
@@ -50,6 +55,18 @@ class Stage(object):
         self.nearestResouces[character.point] = closest
         return closest
 
+    def castlePoint(self, character):
+        if not self.enemyCastle:
+            for enemy in self.enemies:
+                if enemy.type == UnitType.CASTLE:
+                    self.enemyCastle = enemy.point
+                    break
+
+        if self.enemyCastle:
+            return self.enemyCastle
+
+        return Point(character.cid % 40, character.cid % 20)
+
     def updateUnits(self):
         for unit in self.units:
             if unit.type == UnitType.WORKER:
@@ -59,6 +76,7 @@ class Stage(object):
             if unit.type == UnitType.FIGHTER:
                 self.forces.append(unit)
             if unit.type == UnitType.KNIGHT:
+                self.knights.append(unit)
                 self.forces.append(unit)
             if unit.type == UnitType.CASTLE:
                 self.castle = unit

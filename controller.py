@@ -2,6 +2,7 @@ from codevs import *
 from model import Character,Point
 import brain
 
+NAME = "cocodrips"
 def turnInput(aBrain):
     time = int(raw_input())
     stageNum = int(raw_input())
@@ -25,16 +26,17 @@ def turnInput(aBrain):
     for i in xrange(R):
         y, x = map(int, raw_input().split())
         resources.append(Point(x, y))
-
-    aBrain.startTurn(time, stageNum, turnNum, units, enemies, resources)
-
+    aBrain.startTurn(time, stageNum, turnNum, resourceNum, units, enemies, resources)
+    raw_input() #end
 
 def main():
     aBrain = brain.Brain()
     while True:
         turnInput(aBrain)
-
+        print NAME
+        print len(aBrain.actions)
+        for action in aBrain.actions:
+            print action[0], action[1]
 
 if __name__ == '__main__':
-    print UnitType(0).value
-
+    main()

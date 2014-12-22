@@ -1,7 +1,7 @@
 from point import Point
 
 class Character(object):
-    def ___init__(self, cid, y, x, hp, type):
+    def __init__(self, cid, y, x, hp, type):
         self.cid = cid
         self.point = Point(x, y)
         self.hp = hp
@@ -14,7 +14,7 @@ class Character(object):
             return 'L'
         if point.y - self.point.y > 0:
             return 'D'
-        if point.y - self.point.t < 0:
+        if point.y - self.point.y < 0:
             return 'U'
         return False
 

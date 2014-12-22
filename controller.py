@@ -1,14 +1,13 @@
 from codevs import *
 from model import Character,Point
+import sys
 import brain
 
-NAME = "cocodrips"
 def turnInput(aBrain):
     time = int(raw_input())
     stageNum = int(raw_input())
     turnNum = int(raw_input())
     resourceNum = int(raw_input())
-
     units = []
     N = int(raw_input())
     for i in xrange(N):
@@ -32,11 +31,16 @@ def turnInput(aBrain):
 def main():
     aBrain = brain.Brain()
     while True:
-        turnInput(aBrain)
-        print NAME
+        sys.stdout.flush()
+        try:
+            turnInput(aBrain)
+        except Exception as e:
+            pass
         print len(aBrain.actions)
         for action in aBrain.actions:
             print action[0], action[1]
+        # print 0, 0
 
 if __name__ == '__main__':
+    print 'cocodrips'
     main()

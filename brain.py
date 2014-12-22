@@ -52,7 +52,7 @@ class Brain():
             if self.aStage.resourceNum < Cost[UnitType.BASE.value] or len(self.aStage.bases) > 0:
                 d = self.goToNearestResource(worker)
             else:
-                d = UnitType.BASE
+                d = UnitType.BASE.value
                 self.aStage.resourceNum -= Cost[UnitType.BASE.value]
             if d:
                self.actions.append((worker.cid, d))

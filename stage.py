@@ -1,5 +1,6 @@
 from codevs import *
 from model import Point
+import random
 
 
 class Stage(object):
@@ -14,6 +15,8 @@ class Stage(object):
         self.workers = []
         self.resources = {}
         self.nearestResouces = {}
+
+        self.field = [[False for i in xrange(100)] for i in xrange(100)]
 
     def startTurn(self, time, stageNum, turnNum, resourceNum, units, enemies, resources):
         self.time = time
@@ -32,27 +35,27 @@ class Stage(object):
         self.castle = None
         self.updateUnits()
 
-
         for resource in resources:
             if resource not in self.resources:
                 self.resources[resource] = 0
 
-    def nearestResouce(self, character):
-        if self.nearestResouces.get(character.point):
-            return self.nearestResouces.get(character.point)
+    def checkVisit(self):
+        for
 
+    def nearestResouce(self, character):
         closest = None
         minD = INF
         for resource, count in self.resources.items():
             d = resource.dist(character.point)
-            if d < minD:
+            if d < minD and count < 5:
                 closest = resource
                 minD = d
 
         if not closest:
-            return Point(character.point.x - 10, character.point.y - character.cid % 10)
-
-        self.nearestResouces[character.point] = closest
+            if character.goal:
+                character.goal = Point(character.point.x - 10, min(99, character.point.y - (character.cid % 15 - 10)))
+            return Point(character.point.x - 10, min(99, character.point.y - (character.cid % 15 - 10)))
+        self.resources[closest] += 1
         return closest
 
     def castlePoint(self, character):

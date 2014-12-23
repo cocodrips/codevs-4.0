@@ -29,6 +29,7 @@ class Stage(object):
         # Initialize units.
         self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
+        self.updateUnits()
         self.updateVisitPoint()
 
         self._searchPoints = []
@@ -39,7 +40,7 @@ class Stage(object):
 
         for resource, charas in self.resources.items():
             d = resource.dist(character.point)
-            if d < minD and len(charas) < self.workerThrehold:
+            if d < minD and len(charas) < self.workerThrehold and self.enemies.aroundStrength(resource, 5) < 5000:
                 closest = resource
                 minD = d
 
@@ -50,6 +51,9 @@ class Stage(object):
         if not closest:
             if not character.goal:
                 point = self.randomAction(character)
+                if not point: # 全部回ってると起動するか考える
+                    return character.goal.append(character.point)
+
                 character.goal.append(Point(point.x, character.point.y))
                 character.goal.append(point)
             return

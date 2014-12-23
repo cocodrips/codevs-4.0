@@ -3,6 +3,7 @@ from codevs import *
 from model import Point
 import stage
 import random
+import sys
 
 
 class Brain():
@@ -23,19 +24,21 @@ class Brain():
         self.force()
 
     def product(self):
-        for production in self.aStage.supporter.unit[UnitType.CASTLE]:
+        productions = self.aStage.supporter.unit[UnitType.VILLAGE]
+        productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
+                                            self.aStage.enemies.aroundStrength(x.point, 5)) )  # ワーカーが少ない村に優先的に
+        productions += self.aStage.supporter.unit[UnitType.CASTLE]
+        for production in productions:
             if self.aStage.turnNum % 3 == 0:
                 return
 
             if self.aStage.resourceNum < Cost[UnitType.WORKER.value]:
                 return
 
-            if len(self.aStage.supporter.unit[UnitType.WORKER]) > 50:
+            if len(self.aStage.supporter.unit[UnitType.WORKER]) > 100:
                 continue
 
-            p1 = production.point.plus(Point(-20, -20))
-            p2 = production.point.plus(Point(20, 20))
-            if self.aStage.enemies.rangeStrength(p1, p2) < 300:  # 後で定数化
+            if self.aStage.enemies.aroundStrength(production.point, 10) < 2000:  # 後で定数化
                 self.actions[production.cid] = UnitType.WORKER.value
                 self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
 
@@ -43,21 +46,21 @@ class Brain():
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
-            if len(self.aStage.supporter.unit[UnitType.KNIGHT]) < 20:
-                self.actions[base.cid] = UnitType.KNIGHT.value
-                self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
+            # if len(self.aStage.supporter.unit[UnitType.KNIGHT]) < 30:
+            #     self.actions[base.cid] = UnitType.KNIGHT.value
+            #     self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
             else:
-                t = UnitType.FIGHTER.value + random.randint(0, 1)
+                t = UnitType.KNIGHT.value + random.randint(0, 2)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
 
     def knight(self):
-        for knight in self.aStage.supporter.unit[UnitType.KNIGHT]:
-            pass
+        # for knight in self.aStage.supporter.unit[UnitType.KNIGHT]:
+        pass
 
     def force(self):
         units = self.aStage.supporter.unit
-        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER]
+        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] +  units[UnitType.KNIGHT]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
 
         searchPoints = [self.aStage.field]
@@ -77,11 +80,28 @@ class Brain():
         bases = self.aStage.supporter.unit[UnitType.BASE]
         workers = self.aStage.supporter.unit[UnitType.WORKER]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+
+        buildBase = None
+        if Cost[UnitType.BASE.value] < self.aStage.resourceNum:
+            buildBase = self.safetyVillage()
+            if buildBase:
+                sys.stderr.write("plan {},{}\n".format(buildBase.x, buildBase.y))
+
         for worker in workers:
             d = False
-            if worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 2:
+            if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
+                UnitType.VILLAGE.value] and self.distToVillage(worker) > 50:
+                d = UnitType.VILLAGE.value
+                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+
+            elif worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 1:
                 d = UnitType.BASE.value
                 self.aStage.resourceNum -= Cost[UnitType.BASE.value]
+
+            elif buildBase and worker.point == buildBase:
+                d = UnitType.BASE.value
+                self.aStage.resourceNum -= Cost[UnitType.BASE.value]
+                buildBase = None
 
             else:
                 self.checkPoint(worker)
@@ -95,3 +115,23 @@ class Brain():
     def checkPoint(self, character):
         if not character.isFix and character.goal and character.goal[0] == character.point:
             character.goal.pop(0)
+
+    def distToVillage(self, character):
+        d = INF
+        for v in self.aStage.supporter.unit[UnitType.CASTLE] + self.aStage.supporter.unit[UnitType.VILLAGE]:
+            d = min(d, character.point.dist(v.point))
+        return d
+
+    def safetyVillage(self):
+        strength = INF
+        villange = None
+        for v in self.aStage.supporter.unit[UnitType.VILLAGE]:
+            s = self.aStage.enemies.aroundStrength(v.point, 10)
+            if s < strength:
+                strength = s
+                villange = v
+        if villange:
+            return villange.point
+        return None
+
+

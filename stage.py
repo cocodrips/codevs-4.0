@@ -27,9 +27,11 @@ class Stage(object):
             self.workerThrehold = 7
 
         # Initialize units.
-        self.supporter.turnInitialize()
+        self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
         self.updateVisitPoint()
+
+        self._searchPoints = []
 
     def nearestResouce(self, character):
         closest = None
@@ -94,5 +96,17 @@ class Stage(object):
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
             for j in xrange(MAPSIZE / self.GRID):
-                if self.supporter.map[i*self.GRID][j*self.GRID] > 0:
-                   self.field[i][j] = True
+                if self.supporter.map[i * self.GRID][j * self.GRID] > 0:
+                    self.field[i][j] = True
+
+    def searchPoints(self):
+        if self.searchPoints:
+            return self.searchPoints()
+        searchPoints = []
+        for i in xrange(MAPSIZE / self.GRID):
+            for j in xrange(MAPSIZE / self.GRID):
+                if self.field[i][j] == 0:
+                    searchPoints.append(Point(i * MAPSIZE, j * MAPSIZE))
+        self._searchPoints = searchPoints
+        return searchPoints
+

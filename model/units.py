@@ -1,4 +1,5 @@
 from codevs import *
+from model import Point
 
 
 class Units:
@@ -9,9 +10,21 @@ class Units:
         self.castle = None
         self.unit = [[] for unitType in UnitType]
 
-    def turnInitialize(self):
+    def turnInitialize(self, turnNum=10):
         self.unit = [[] for unitType in UnitType]
         self.update()
+        if turnNum == 0:
+            i = 0
+            zero = self.unit[UnitType.CASTLE][0].point
+            for worker in self.unit[UnitType.WORKER]:
+                width = i * 18
+                for j in xrange(25):
+                    if j % 4 == (2 or 3):
+                        worker.goal.append(Point(width + 11, zero.y + j / 2 * 9))
+                    else:
+                        worker.goal.append(Point(width + 2, zero.y + j / 2 * 9))
+                i += 1
+
 
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]

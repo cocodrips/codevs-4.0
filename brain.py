@@ -59,6 +59,8 @@ class Brain():
         units = self.aStage.supporter.unit
         forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+
+        searchPoints = [self.aStage.field]
         for force in forces:
             d = None
             if force.cid % 5 < 3:
@@ -71,9 +73,29 @@ class Brain():
                 self.actions[force.cid] = d
 
     def work(self):
-        workers = self.aStage.supporter.unit[UnitType.WORKER]
+        # workers = [i for i in self.aStage.supporter.unit[UnitType.WORKER] if not i.isFix]
         bases = self.aStage.supporter.unit[UnitType.BASE]
+        workers = self.aStage.supporter.unit[UnitType.WORKER]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+
+        # for resource, rworker in self.aStage.resources.items():
+        #     if not workers:
+        #         break
+        #     c = self.aStage.workerThrehold - len(rworker)
+        #     if c > 0:
+        #         group = []
+        #         for w in workers:
+        #             if len(group) < 3:
+        #                 group.append((resource.dist(w.point), w))
+        #             elif resource.dist(w.point) < group[-1][0]:
+        #                 group[-1] = (resource.dist(w.point), w)
+        #             group.sort(key=lambda x:x[0])
+        #         for g in group:
+        #             g[1].goal = [resource]
+        #             g[1].isFix = True
+        #             workers.remove(g[1])
+        #         rworker += [g[1] for g in group]
+
         for worker in workers:
             d = False
             if worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 2:
@@ -82,7 +104,7 @@ class Brain():
 
             else:
                 self.checkPoint(worker)
-                if not worker.isFix:
+                if not worker.goal:
                     self.aStage.nearestResouce(worker)
                 d = worker.goToPoint(worker.goal[0])
 

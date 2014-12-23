@@ -15,6 +15,9 @@ class Point(object):
     def __hash__(self):
         return self.x * 1000 + self.y
 
+    def plus(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+
     def dist(self, other):
         return abs(self.x - other.x) + abs(self.y - other.y)
 

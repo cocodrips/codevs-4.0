@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from codevs import *
+from model import Point
 import stage
 import random
 
@@ -11,8 +12,7 @@ class Brain():
 
     def startTurn(self):
         self.aStage.startTurn()
-        self.actions = []
-        self.checkVisitPoint()
+        self.actions = {}
         self.ai()
 
     def ai(self):
@@ -23,41 +23,63 @@ class Brain():
         self.force()
 
     def product(self):
-        for production in self.aStage.productions:
-            if len(self.aStage.workers) < 100:  # 後で定数化
-                if self.aStage.resourceNum >= Cost[UnitType.WORKER.value]:
-                    self.actions.append((production.cid, UnitType.WORKER.value))
-                    self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
-                    continue
+        for production in self.aStage.supporter.unit[UnitType.CASTLE]:
+            if self.aStage.turnNum % 3 == 0:
+                return
+
+            if self.aStage.resourceNum < Cost[UnitType.WORKER.value]:
+                return
+
+            if len(self.aStage.supporter.unit[UnitType.WORKER]) > 50:
+                continue
+
+            p1 = production.point.plus(Point(-20, -20))
+            p2 = production.point.plus(Point(20, 20))
+            if self.aStage.enemies.rangeStrength(p1, p2) < 300:  # 後で定数化
+                self.actions[production.cid] = UnitType.WORKER.value
+                self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
 
     def base(self):
-        for base in self.aStage.bases:
-            if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                if len(self.aStage.knights) < 10:
-                    self.actions.append((base.cid, UnitType.KNIGHT.value))
-                    self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
-                else:
-                    self.actions.append((base.cid, UnitType.FIGHTER.value))
-                    self.aStage.resourceNum -= Cost[UnitType.FIGHTER.value]
+        for base in self.aStage.supporter.unit[UnitType.BASE]:
+            if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
+                return
+            if len(self.aStage.supporter.unit[UnitType.KNIGHT]) < 20:
+                self.actions[base.cid] = UnitType.KNIGHT.value
+                self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
+            else:
+                t = UnitType.FIGHTER.value + random.randint(0, 1)
+                self.actions[base.cid] = t
+                self.aStage.resourceNum -= Cost[t]
+
+    def knight(self):
+        for knight in self.aStage.supporter.unit[UnitType.KNIGHT]:
+            pass
 
     def force(self):
-        for force in self.aStage.forces:
+        units = self.aStage.supporter.unit
+        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER]
+        castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+        for force in forces:
             d = None
             if force.cid % 2 == 0:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
-            else:
-                d = force.goToPoint(self.aStage.castle.point)
+            else:  # 防衛班
+                point = castlePoint.plus(Point(force.cid % 5, force.cid / 5 % 5))
+                d = force.goToPoint(point)
             if d:
-                self.actions.append((force.cid, d))
-
+                self.actions[force.cid] = d
 
     def work(self):
-        for worker in self.aStage.workers:
+        workers = self.aStage.supporter.unit[UnitType.WORKER]
+        bases = self.aStage.supporter.unit[UnitType.BASE]
+        castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+        for worker in workers:
             d = False
-            if worker.point == self.aStage.castle.point and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(self.aStage.bases) < 2:
+            if worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 2:
                 d = UnitType.BASE.value
                 self.aStage.resourceNum -= Cost[UnitType.BASE.value]
+
             else:
                 self.checkPoint(worker)
                 if not worker.isFix:
@@ -65,26 +87,7 @@ class Brain():
                 d = worker.goToPoint(worker.goal[0])
 
             if d:
-                self.actions.append((worker.cid, d))
-
-
-    def checkVisitPoint(self):
-        field = self.aStage.field
-        r = [[1, 1], [1, -1], [-1, 1], [-1, -1]]
-
-        GRID = self.aStage.GRID
-        for unit in self.aStage.units.values():
-            for i in xrange(Range[unit.type.value] + 1):
-                for j in xrange(Range[unit.type.value] - i + 1):
-                    for x, y in r:
-                        xx = unit.point.x + i * x
-                        yy = unit.point.y + j * y
-                        if 0 <= xx < 100 and xx % GRID == 0 and 0 <= yy < 100 and yy % GRID == 0:
-                            field[xx / GRID][yy / GRID] = 2
-        # for fi in field:
-        #     for f in fi:
-        #         print f,
-        #     print
+                self.actions[worker.cid] = d
 
     def checkPoint(self, character):
         if not character.isFix and character.goal and character.goal[0] == character.point:

@@ -1,19 +1,18 @@
 from codevs import *
-from model import Point, Character
+from model import Point, Character, Units
 import unittest
-import units
 
 
 class UnitsTestCase(unittest.TestCase):
     def setUp(self):
-        self.units = units.Units()
+        self.units = Units()
 
     def testUpdate(self):
         self.units.units = {1: Character(1, 10, 10, 2000, UnitType.WORKER),
                             2: Character(1, 10, 10, 2000, UnitType.CASTLE)}
         self.units.update()
         # for i in self.units.strengthMap:
-        #     for j in i:
+        # for j in i:
         #         print j,
         #     print i
         # print self.units.unit

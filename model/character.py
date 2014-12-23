@@ -1,6 +1,7 @@
 from point import Point
 import random
 
+
 class Character(object):
     def __init__(self, cid, y, x, hp, type, turn=0):
         self.cid = cid
@@ -15,6 +16,11 @@ class Character(object):
 
 
     def goToPoint(self, point):
+        if self.cid % 3 == 0 and random.random() < (self.cid % 10) * 0.08:
+            if point.y - self.point.y > 0:
+                return 'D'
+            if point.y - self.point.y < 0:
+                return 'U'
         if point.x - self.point.x > 0:
             return 'R'
         if point.x - self.point.x < 0:
@@ -23,6 +29,7 @@ class Character(object):
             return 'D'
         if point.y - self.point.y < 0:
             return 'U'
+
         return False
 
     def distanceToCharacter(self, character):

@@ -1,6 +1,4 @@
 from codevs import *
-import stage
-import random
 
 
 class Units:
@@ -30,6 +28,7 @@ class Units:
 
                     if 0 <= x < 100 and 0 <= y < 100:
                         map[x][y] += Strength[v] / (abs(i) + abs(j) + 1)
+        self.map = map
         self.strengthMap = self.cumulativeSumTable(map)
 
 

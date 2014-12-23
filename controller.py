@@ -1,20 +1,21 @@
 from codevs import *
-from model import Character,Point
+from model import Character, Point
 import sys
 import brain
 
-def turnInput(aBrain):
-    aBrain.aStage.time = int(raw_input())
-    aBrain.aStage.stageNum = int(raw_input())
+
+def turnInput(aBrain, t, s):
+    aBrain.aStage.time = t
+    aBrain.aStage.stageNum = s
     aBrain.aStage.turnNum = int(raw_input())
     aBrain.aStage.resourceNum = int(raw_input())
     N = int(raw_input())
 
     turnNum = aBrain.aStage.turnNum
-    units = aBrain.aStage.units
+    units = aBrain.aStage.supporter.units
     for i in xrange(N):
         cid, y, x, hp, utype = map(int, raw_input().split())
-        if cid in aBrain.aStage.units:
+        if cid in units:
             c = units[cid]
             c.point = Point(x, y)
             c.turn = turnNum
@@ -25,7 +26,7 @@ def turnInput(aBrain):
         if v.turn != turnNum:
             units.pop(k)
 
-    enemies = aBrain.aStage.enemies
+    enemies = aBrain.aStage.enemies.units
     M = int(raw_input())
     for i in xrange(M):
         cid, y, x, hp, utype = map(int, raw_input().split())
@@ -43,20 +44,26 @@ def turnInput(aBrain):
         if p not in resources:
             resources[p] = []
     aBrain.startTurn()
-    raw_input() #end
+    raw_input()  # end
+
 
 def main():
-    aBrain = brain.Brain()
+    n = -1
     while True:
         sys.stdout.flush()
+        time = int(raw_input())
+        stageNum = int(raw_input())
+        if stageNum != n:
+            n = stageNum
+            aBrain = brain.Brain()
         # try:
-        turnInput(aBrain)
+        turnInput(aBrain, time, stageNum)
         # except Exception as e:
-        #     pass
+        # pass
         print len(aBrain.actions)
-        for action in aBrain.actions:
-            print action[0], action[1]
-        # print 0, 0
+        for k, v in aBrain.actions.items():
+            print k, v
+
 
 if __name__ == '__main__':
     print 'cocodrips'

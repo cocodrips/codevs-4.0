@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from codevs import *
-from model import Point
+from model import Point, Units
 import random
 
 
@@ -11,29 +11,25 @@ class Stage(object):
         self.stageNum = 0
         self.turnNum = 0
         self.workerThrehold = 5
-        self.enemyCastle = None
+        self.resourceNum = 0
 
-        self.units = {}
-        self.enemies = {}
-        self.workers = []
+        self.supporter = Units()
+        self.enemies = Units()
+
         self.resources = {}
         self.nearestResouces = {}
 
         self.GRID = 4
-        self.field = [[0 for _ in xrange(100/self.GRID)] for _ in xrange(100/self.GRID)]
+        self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
 
     def startTurn(self):
         if self.turnNum > 200:
             self.workerThrehold = 7
 
         # Initialize units.
-        self.workers = []
-        self.productions = []
-        self.forces = []
-        self.bases = []
-        self.knights = []
-        self.castle = None
-        self.updateUnits()
+        self.supporter.turnInitialize()
+        self.enemies.turnInitialize()
+        self.updateVisitPoint()
 
     def nearestResouce(self, character):
         closest = None
@@ -45,8 +41,9 @@ class Stage(object):
                 closest = resource
                 minD = d
 
-        if closest and closest.dist(character.point) < closest.dist(character.point):
-            closest = None
+        if closest and character.goal:
+            if character.point.dist(character.goal[0]) < closest.dist(character.point):
+                closest = None
 
         if not closest:
             if not character.goal:
@@ -66,8 +63,8 @@ class Stage(object):
     def randomAction(self, character):
         closest = None
         d = INF
-        for i in xrange(1, 100/self.GRID, 2):
-            for j in xrange(100/self.GRID):
+        for i in xrange(100 / self.GRID):
+            for j in xrange(100 / self.GRID):
                 if self.field[i][j] == 0:
                     point = Point(i * self.GRID, j * self.GRID)
                     dist = character.point.dist(point)
@@ -77,55 +74,25 @@ class Stage(object):
 
         if closest and d < 70:
             self.field[closest.x / self.GRID][closest.y / self.GRID] = 1
-            self.field[closest.x / self.GRID - 1][closest.y / self.GRID] = 1
-
         return closest
-        return self.castle.point
 
 
     def castlePoint(self, character):
-        if not self.enemyCastle:
-            for enemy in self.enemies.values():
-                if enemy.type == UnitType.CASTLE:
-                    self.enemyCastle = enemy.point
-                    break
-
-        if self.enemyCastle:
-            character.goal = [self.enemyCastle]
+        castle = self.enemies.unit[UnitType.CASTLE.value]
+        if castle:
+            character.goal = [castle[0].point]
             character.isFix = True
             return
 
         if not character.goal:
-            character.goal.append(Point(character.cid % 40, random.randint(0, 39)))
-
+            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 10)))
 
     def updateUnits(self):
-        for unit in self.units.values():
-            if unit.type == UnitType.WORKER:
-                self.workers.append(unit)
-            if unit.type == UnitType.ASSASSIN:
-                self.forces.append(unit)
-            if unit.type == UnitType.FIGHTER:
-                self.forces.append(unit)
-            if unit.type == UnitType.KNIGHT:
-                self.knights.append(unit)
-                self.forces.append(unit)
-            if unit.type == UnitType.CASTLE:
-                self.castle = unit
-                self.productions.append(unit)
-            if unit.type == UnitType.VILLAGE:
-                self.productions.append(unit)
-            if unit.type == UnitType.BASE:
-                self.bases.append(unit)
-
         for k, v in self.resources.items():
             self.resources[k] = [chara for chara in v if chara.turn == self.turnNum]
 
-
-
-
-
-
-
-
-
+    def updateVisitPoint(self):
+        for i in xrange(MAPSIZE / self.GRID):
+            for j in xrange(MAPSIZE / self.GRID):
+                if self.supporter.map[i*self.GRID][j*self.GRID] > 0:
+                   self.field[i][j] = True

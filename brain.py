@@ -67,7 +67,7 @@ class Brain():
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
             else:  # 防衛班
-                point = castlePoint.plus(Point(2 * force.cid % 5, 2 * force.cid / 5 % 5 + 4))
+                point = castlePoint.plus(Point(2 * force.cid % 5, 2 * force.cid / 5 % 5))
                 d = force.goToPoint(point)
             if d:
                 self.actions[force.cid] = d
@@ -77,25 +77,6 @@ class Brain():
         bases = self.aStage.supporter.unit[UnitType.BASE]
         workers = self.aStage.supporter.unit[UnitType.WORKER]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
-
-        # for resource, rworker in self.aStage.resources.items():
-        #     if not workers:
-        #         break
-        #     c = self.aStage.workerThrehold - len(rworker)
-        #     if c > 0:
-        #         group = []
-        #         for w in workers:
-        #             if len(group) < 3:
-        #                 group.append((resource.dist(w.point), w))
-        #             elif resource.dist(w.point) < group[-1][0]:
-        #                 group[-1] = (resource.dist(w.point), w)
-        #             group.sort(key=lambda x:x[0])
-        #         for g in group:
-        #             g[1].goal = [resource]
-        #             g[1].isFix = True
-        #             workers.remove(g[1])
-        #         rworker += [g[1] for g in group]
-
         for worker in workers:
             d = False
             if worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 2:

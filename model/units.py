@@ -13,6 +13,8 @@ class Units:
     def turnInitialize(self, turnNum=10):
         self.unit = [[] for unitType in UnitType]
         self.update()
+        self._aroundStrength = {}
+        self._strongest = None
         if turnNum == 0:
             i = 0
             zero = self.unit[UnitType.CASTLE][0].point
@@ -30,7 +32,7 @@ class Units:
         for unit in self.units.values():
             v = unit.type.value
             self.unit[v].append(unit)
-            r = Range[v]
+            r = AttackRange[v]
 
             for i in xrange(-r, r + 1):
                 rr = r - abs(i)
@@ -44,9 +46,25 @@ class Units:
         self.strengthMap = self.cumulativeSumTable(map)
 
     def aroundStrength(self, point, size):
+        if self._aroundStrength.get((point, size)):
+            return self._aroundStrength[(point, size)]
         p1 = Point(point.x - size, point.y - size)
         p2 = Point(point.x + size, point.y + size)
-        return self.rangeStrength(p1, p2)
+
+        self._aroundStrength[(point, size)] = self.rangeStrength(p1, p2)
+        return self._aroundStrength[(point, size)]
+
+    def strongest(self):
+        if not self._strongest:
+            maxi = -1
+            point = None
+            for i in xrange(MAPSIZE):
+                for j in xrange(MAPSIZE):
+                    if maxi < self.map[i][j]:
+                        maxi = self.map[i][j]
+                        point = Point(i, j)
+            self._strongest = point
+        return self._strongest
 
 
     def rangeStrength(self, p1, p2):

@@ -90,6 +90,10 @@ class Stage(object):
             character.isFix = True
             return
 
+        if character.goal and character.goal[0] == character.point:
+            character.goal.append(self.enemies.strongest())
+            character.goal.pop(0)
+
         if not character.goal:
             character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 10)))
 

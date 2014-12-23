@@ -4,6 +4,7 @@ from model import Point
 import stage
 import random
 import sys
+import copy
 
 
 class Brain():
@@ -24,30 +25,34 @@ class Brain():
         self.force()
 
     def product(self):
-        productions = self.aStage.supporter.unit[UnitType.VILLAGE]
+        productions = copy.deepcopy(self.aStage.supporter.unit[UnitType.VILLAGE])
         productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
                                         self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
         productions += self.aStage.supporter.unit[UnitType.CASTLE]
-        for production in productions:
-            if self.aStage.turnNum % 3 == 0:
+        resources = self.aStage.resources
+        for resource, worker in resources.items():
+            if not productions:
                 return
 
-            if self.aStage.resourceNum < Cost[UnitType.WORKER.value]:
-                return
-
-            if len(self.aStage.supporter.unit[UnitType.WORKER]) > 100:
+            if len(worker) >= self.aStage.workerThrehold:
                 continue
 
-            if self.aStage.enemies.aroundStrength(production.point, 10) < 2000:  # 後で定数化
-                self.actions[production.cid] = UnitType.WORKER.value
-                self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+            if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
+                continue
+
+            for production in productions:
+                if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
+                    self.actions[production.cid] = UnitType.WORKER.value
+                    self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+                    productions.remove(production)
+
 
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
             else:
-                t = UnitType.KNIGHT.value + random.randint(0, 2)
+                t = UnitType.KNIGHT.value + min(2, random.randint(0, 3))
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
 

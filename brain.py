@@ -61,11 +61,11 @@ class Brain():
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
         for force in forces:
             d = None
-            if force.cid % 2 == 0:
+            if force.cid % 5 < 3:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
             else:  # 防衛班
-                point = castlePoint.plus(Point(force.cid % 5, force.cid / 5 % 5))
+                point = castlePoint.plus(Point(2 * force.cid % 5, 2 * force.cid / 5 % 5 + 4))
                 d = force.goToPoint(point)
             if d:
                 self.actions[force.cid] = d

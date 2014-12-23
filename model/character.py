@@ -1,3 +1,4 @@
+from codevs import *
 from point import Point
 import random
 
@@ -16,7 +17,7 @@ class Character(object):
 
 
     def goToPoint(self, point):
-        if self.cid % 3 == 0 and random.random() < (self.cid % 10) * 0.08:
+        if self.cid % 10 > 5: #or (3 < self.cid % 10 < 7 and random.randint(0, 1) == 1):
             if point.y - self.point.y > 0:
                 return 'D'
             if point.y - self.point.y < 0:

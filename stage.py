@@ -23,9 +23,6 @@ class Stage(object):
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
 
     def startTurn(self):
-        if self.turnNum > 200:
-            self.workerThrehold = 7
-
         # Initialize units.
         self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
@@ -95,7 +92,7 @@ class Stage(object):
             character.goal.pop(0)
 
         if not character.goal:
-            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 10)))
+            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 40)))
 
     def updateUnits(self):
         for k, v in self.resources.items():

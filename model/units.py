@@ -21,10 +21,15 @@ class Units:
             for worker in self.unit[UnitType.WORKER]:
                 width = i * 18
                 worker.goal = [Point(width + 2, zero.y),
-                               Point(width + 2, 99 - 11 * i),
-                               Point(width + 11, 99 - 11 * i),
+                               Point(width + 2, 99 - 15 * i),
+                               Point(width + 11, 99 - 15 * i),
                                Point(width + 11, 0)]
                 i += 1
+            worker.goal.append(Point(i * 18 + 2, 0))
+            worker.goal.append(Point(i * 18 + 2, 99 - 15 * i))
+            worker.goal.append(Point(i * 18 + 11, 99 - 15 * i))
+            worker.goal.append(Point(i * 18 + 11, 0))
+
 
 
     def update(self):

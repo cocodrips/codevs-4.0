@@ -46,6 +46,12 @@ class Brain():
                     self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
                     productions.remove(production)
 
+        # 未実装／城の上に一匹だけ常駐させる
+        for production in productions:
+            if production.cid % 20 == self.aStage.turnNum % 20:
+                self.actions[production.cid] = UnitType.WORKER.value
+                self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+
 
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
@@ -79,7 +85,7 @@ class Brain():
         for force in forces:
             d = None
             check(self, force)
-            if force.cid % 10 < 7:
+            if force.cid % 10 < 5:
                 if resources and force.goal:
                     for resource in resources:
                         if force.point.dist(resource) < 15:
@@ -92,7 +98,7 @@ class Brain():
                     self.aStage.castlePoint(force)
                     d = force.goToPoint(force.goal[0])
             else:  # 防衛班
-                point = castlePoint.plus(Point(2 * force.cid % 5, 2 * force.cid / 5 % 5))
+                point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
                 d = force.goToPoint(point)
             if d:
                 self.actions[force.cid] = d
@@ -112,7 +118,7 @@ class Brain():
         for worker in workers:
             d = False
             if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
-                UnitType.VILLAGE.value] and self.distToVillage(worker) > 70:
+                UnitType.VILLAGE.value] and self.distToVillage(worker) > 30:
                 d = UnitType.VILLAGE.value
                 self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
 
@@ -146,7 +152,7 @@ class Brain():
         return d
 
     def safetyVillage(self):
-        strength = INF
+        strength = 10000
         villange = None
         for v in self.aStage.supporter.unit[UnitType.VILLAGE]:
             s = self.aStage.enemies.aroundStrength(v.point, 10)

@@ -3,6 +3,8 @@ from codevs import *
 from model import Point
 import stage
 import random
+import sys
+import copy
 
 
 class Brain():
@@ -23,66 +25,159 @@ class Brain():
         self.force()
 
     def product(self):
-        for production in self.aStage.supporter.unit[UnitType.CASTLE]:
-            if self.aStage.turnNum % 3 == 0:
+        productions = copy.deepcopy(self.aStage.supporter.unit[UnitType.VILLAGE])
+        productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
+                                        self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
+        productions += self.aStage.supporter.unit[UnitType.CASTLE]
+        resources = self.aStage.resources
+        for resource, worker in resources.items():
+            if not productions:
                 return
 
-            if self.aStage.resourceNum < Cost[UnitType.WORKER.value]:
-                return
-
-            if len(self.aStage.supporter.unit[UnitType.WORKER]) > 50:
+            if len(worker) >= self.aStage.workerThrehold:
                 continue
 
-            p1 = production.point.plus(Point(-20, -20))
-            p2 = production.point.plus(Point(20, 20))
-            if self.aStage.enemies.rangeStrength(p1, p2) < 300:  # 後で定数化
+            if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
+                continue
+
+            for production in productions:
+                if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
+                    self.actions[production.cid] = UnitType.WORKER.value
+                    self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+                    productions.remove(production)
+
+        # 未実装／城の上に一匹だけ常駐させる
+        for production in productions:
+            if production.cid % 20 == self.aStage.turnNum % 20:
                 self.actions[production.cid] = UnitType.WORKER.value
                 self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+
 
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
-            if len(self.aStage.supporter.unit[UnitType.KNIGHT]) < 20:
-                self.actions[base.cid] = UnitType.KNIGHT.value
-                self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
+
             else:
-                t = UnitType.FIGHTER.value + random.randint(0, 1)
+                t = UnitType.KNIGHT.value + min(2, random.randint(0, 3))
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
 
-    def knight(self):
-        for knight in self.aStage.supporter.unit[UnitType.KNIGHT]:
-            pass
 
     def force(self):
+        def check(self, character):
+            if not character.isFix and character.goal and character.goal[0] == character.point:
+                if self.aStage.enemies.aroundStrength(character.point, 2) < 500:
+                    character.goal.pop(0)
+
+        def unsafetyResource(self):
+            r = []
+            for resource in self.aStage.resources:
+                s = self.aStage.enemies.aroundStrength(resource, 10)
+                if 100 < s:
+                    r.append(resource)
+            return r
+
+        resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
-        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER]
+        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+
         for force in forces:
+            check(self, force)
+            #生成された兵士はここで命を受ける
+            if not force.forceType:
+                # 城から生成される兵士
+                if force.point == castlePoint:
+                    force.type = ForceType(random.randint(0, 1))
+                else:
+                    force.type = ForceType(random.randint(1, 2))
+
+            # 命令の種類
             d = None
-            if force.cid % 5 < 3:
+            # 役割の決まった兵士たちの行動
+
+            # GATEKEEPER
+            if force.forceType == ForceType.GATEKEEPER:
+                point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
+                p, strength =  self.aStage.enemies.rangeStrength(force.point, 4)
+                if strength > 1:
+                    point = p
+                d = force.goToPoint(point)
+
+            # WALKER
+            elif force.forceType == ForceType.WALKER:
+                for resource in resources:
+                    if force.point.dist(resource) < 15:
+                        force.goal = [resource]
+                        d = force.goToPoint(force.goal[0])
+                        resources.remove(resource)
+                        break
+                if not d:
+                    self.aStage.castlePoint(force)
+                    d = force.goToPoint(force.goal[0])
+
+            else:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
-            else:  # 防衛班
-                point = castlePoint.plus(Point(2 * force.cid % 5, 2 * force.cid / 5 % 5 + 4))
-                d = force.goToPoint(point)
+
             if d:
                 self.actions[force.cid] = d
 
+
+            #
+            # d = None
+            # check(self, force)
+            # if force.cid % 10 < 5:
+            #     if resources and force.goal:
+            #         for resource in resources:
+            #             if force.point.dist(resource) < 15:
+            #                 force.goal = [resource]
+            #                 d = force.goToPoint(force.goal[0])
+            #                 resources.remove(resource)
+            #                 break
+            #
+            #     if not d:
+            #         self.aStage.castlePoint(force)
+            #         d = force.goToPoint(force.goal[0])
+            # else:  # 防衛班
+            #     point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
+            #     d = force.goToPoint(point)
+            # if d:
+            #     self.actions[force.cid] = d
+
     def work(self):
-        workers = self.aStage.supporter.unit[UnitType.WORKER]
+        # workers = [i for i in self.aStage.supporter.unit[UnitType.WORKER] if not i.isFix]
         bases = self.aStage.supporter.unit[UnitType.BASE]
+        workers = self.aStage.supporter.unit[UnitType.WORKER]
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
+
+        buildBase = None
+        if Cost[UnitType.BASE.value] < self.aStage.resourceNum:
+            buildBase = self.safetyVillage()
+            if buildBase:
+                sys.stderr.write("plan {},{}\n".format(buildBase.x, buildBase.y))
+
         for worker in workers:
             d = False
-            if worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 2:
+            if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
+                UnitType.VILLAGE.value] and self.distToVillage(worker) > 30:
+                d = UnitType.VILLAGE.value
+                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+
+            elif worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 1:
                 d = UnitType.BASE.value
                 self.aStage.resourceNum -= Cost[UnitType.BASE.value]
 
+            elif buildBase and worker.point == buildBase and len(bases) > 0:
+                sys.stderr.write("{}, {}\n".format(buildBase.x, buildBase.y))
+                d = UnitType.BASE.value
+                self.aStage.resourceNum -= Cost[UnitType.BASE.value]
+                buildBase = None
+
             else:
                 self.checkPoint(worker)
-                if not worker.isFix:
+                if not worker.goal:
                     self.aStage.nearestResouce(worker)
                 d = worker.goToPoint(worker.goal[0])
 
@@ -92,3 +187,28 @@ class Brain():
     def checkPoint(self, character):
         if not character.isFix and character.goal and character.goal[0] == character.point:
             character.goal.pop(0)
+
+    def distToVillage(self, character):
+        d = INF
+        for v in self.aStage.supporter.unit[UnitType.CASTLE] + self.aStage.supporter.unit[UnitType.VILLAGE]:
+            d = min(d, character.point.dist(v.point))
+        return d
+
+    def safetyVillage(self):
+        strength = 10000
+        villange = None
+        for v in self.aStage.supporter.unit[UnitType.VILLAGE]:
+            s = self.aStage.enemies.aroundStrength(v.point, 10)
+            if s < strength:
+                strength = s
+                villange = v
+        if villange:
+            return villange.point
+        return None
+
+
+
+
+
+
+

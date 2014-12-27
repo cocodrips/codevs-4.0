@@ -23,13 +23,13 @@ class Stage(object):
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
 
     def startTurn(self):
-        if self.turnNum > 200:
-            self.workerThrehold = 7
-
         # Initialize units.
-        self.supporter.turnInitialize()
+        self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
+        self.updateUnits()
         self.updateVisitPoint()
+
+        self._searchPoints = []
 
     def nearestResouce(self, character):
         closest = None
@@ -37,7 +37,7 @@ class Stage(object):
 
         for resource, charas in self.resources.items():
             d = resource.dist(character.point)
-            if d < minD and len(charas) < self.workerThrehold:
+            if d < minD and len(charas) < self.workerThrehold and self.enemies.aroundStrength(resource, 5) < 5000:
                 closest = resource
                 minD = d
 
@@ -48,6 +48,9 @@ class Stage(object):
         if not closest:
             if not character.goal:
                 point = self.randomAction(character)
+                if not point: # 全部回ってると起動するか考える
+                    return character.goal.append(character.point)
+
                 character.goal.append(Point(point.x, character.point.y))
                 character.goal.append(point)
             return
@@ -84,8 +87,13 @@ class Stage(object):
             character.isFix = True
             return
 
+        if character.goal and character.goal[0] == character.point:
+            strongestPoint, strength = self.enemies.strongest(character.point, 5)
+            character.goal.append(strongestPoint)
+            character.goal.pop(0)
+
         if not character.goal:
-            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 10)))
+            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 40)))
 
     def updateUnits(self):
         for k, v in self.resources.items():
@@ -94,5 +102,17 @@ class Stage(object):
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
             for j in xrange(MAPSIZE / self.GRID):
-                if self.supporter.map[i*self.GRID][j*self.GRID] > 0:
-                   self.field[i][j] = True
+                if self.supporter.map[i * self.GRID][j * self.GRID] > 0:
+                    self.field[i][j] = True
+
+    def searchPoints(self):
+        if self.searchPoints:
+            return self.searchPoints()
+        searchPoints = []
+        for i in xrange(MAPSIZE / self.GRID):
+            for j in xrange(MAPSIZE / self.GRID):
+                if self.field[i][j] == 0:
+                    searchPoints.append(Point(i * MAPSIZE, j * MAPSIZE))
+        self._searchPoints = searchPoints
+        return searchPoints
+

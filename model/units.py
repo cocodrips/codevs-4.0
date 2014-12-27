@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 from codevs import *
+from model import Point
 
 
 class Units:
@@ -9,16 +11,33 @@ class Units:
         self.castle = None
         self.unit = [[] for unitType in UnitType]
 
-    def turnInitialize(self):
+    def turnInitialize(self, turnNum=10):
         self.unit = [[] for unitType in UnitType]
         self.update()
+        self._aroundStrength = {}
+        self._strongest = {}
+        if turnNum == 0:
+            i = 0
+            zero = self.unit[UnitType.CASTLE][0].point
+            for worker in self.unit[UnitType.WORKER]:
+                width = i * 18
+                worker.goal = [Point(width + 2, zero.y),
+                               Point(width + 2, 99 - 15 * i),
+                               Point(width + 11, 99 - 15 * i),
+                               Point(width + 11, 0)]
+                i += 1
+            worker.goal.append(Point(i * 18 + 2, 0))
+            worker.goal.append(Point(i * 18 + 2, 99 - 15 * i))
+            worker.goal.append(Point(i * 18 + 11, 99 - 15 * i))
+            worker.goal.append(Point(i * 18 + 11, 0))
+
 
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]
         for unit in self.units.values():
             v = unit.type.value
             self.unit[v].append(unit)
-            r = Range[v]
+            r = AttackRange[v]
 
             for i in xrange(-r, r + 1):
                 rr = r - abs(i)
@@ -31,8 +50,31 @@ class Units:
         self.map = map
         self.strengthMap = self.cumulativeSumTable(map)
 
+    def aroundStrength(self, point, size):
+        if self._aroundStrength.get((point, size)):
+            return self._aroundStrength[(point, size)]
+        p1 = Point(point.x - size, point.y - size)
+        p2 = Point(point.x + size, point.y + size)
+
+        self._aroundStrength[(point, size)] = self.rangeStrength(p1, p2)
+        return self._aroundStrength[(point, size)]
+
+    def strongest(self, point, size):  # セグツリーつかってみたい
+        if not self._strongest.get((point, size)):
+            maxi = -1
+            strongestPoint = None
+            for i in xrange(max(0, point.x - size), min(point.x + size + 1, MAPSIZE)):
+                for j in xrange(max(0, point.y - size), min(point.y + size + 1, MAPSIZE)):
+                    if maxi < self.map[i][j]:
+                        maxi = self.map[i][j]
+                        strongestPoint = Point(i, j)
+            self._strongest[(point, size)] = (strongestPoint, maxi)
+        return self._strongest[(point, size)]
+
 
     def rangeStrength(self, p1, p2):
+        p2.x = min(MAPSIZE - 1, p2.x)
+        p2.y = min(MAPSIZE - 1, p2.y)
         s = self.strengthMap[p2.x][p2.y]
         if p1.x > 0:
             s -= self.strengthMap[p1.x - 1][p2.y]

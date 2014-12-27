@@ -10,6 +10,14 @@ class UnitType(enum.IntEnum):
     VILLAGE = 5
     BASE = 6
 
+class ForceType(enum.IntEnum):
+    GATEKEEPER = 0
+    WALKER = 1
+    ATTACKER = 2
+    HOUSE_SITTING = 3
+    EXPLORER = 4
+
+
 
 Cost = [40, 20, 40, 60, 0, 100, 500]
 Range = [4, 4, 4, 4, 10, 10, 4]

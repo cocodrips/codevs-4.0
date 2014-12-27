@@ -13,7 +13,7 @@ class Character(object):
         self.turn = turn
         self.isFix = False
         self.group = []
-        self.group_id = -1
+        self.forceType = None
 
 
     def goToPoint(self, point):

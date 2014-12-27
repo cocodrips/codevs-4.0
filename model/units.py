@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from codevs import *
 from model import Point
 
@@ -14,7 +15,7 @@ class Units:
         self.unit = [[] for unitType in UnitType]
         self.update()
         self._aroundStrength = {}
-        self._strongest = None
+        self._strongest = {}
         if turnNum == 0:
             i = 0
             zero = self.unit[UnitType.CASTLE][0].point
@@ -29,7 +30,6 @@ class Units:
             worker.goal.append(Point(i * 18 + 2, 99 - 15 * i))
             worker.goal.append(Point(i * 18 + 11, 99 - 15 * i))
             worker.goal.append(Point(i * 18 + 11, 0))
-
 
 
     def update(self):
@@ -59,17 +59,17 @@ class Units:
         self._aroundStrength[(point, size)] = self.rangeStrength(p1, p2)
         return self._aroundStrength[(point, size)]
 
-    def strongest(self):
-        if not self._strongest:
+    def strongest(self, point, size):  # セグツリーつかってみたい
+        if not self._strongest.get((point, size)):
             maxi = -1
-            point = None
-            for i in xrange(MAPSIZE):
-                for j in xrange(MAPSIZE):
+            strongestPoint = None
+            for i in xrange(max(0, point.x - size), min(point.x + size + 1, MAPSIZE)):
+                for j in xrange(max(0, point.y - size), min(point.y + size + 1, MAPSIZE)):
                     if maxi < self.map[i][j]:
                         maxi = self.map[i][j]
-                        point = Point(i, j)
-            self._strongest = point
-        return self._strongest
+                        strongestPoint = Point(i, j)
+            self._strongest[(point, size)] = (strongestPoint, maxi)
+        return self._strongest[(point, size)]
 
 
     def rangeStrength(self, p1, p2):

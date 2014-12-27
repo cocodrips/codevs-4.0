@@ -57,6 +57,7 @@ class Brain():
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
+
             else:
                 t = UnitType.KNIGHT.value + min(2, random.randint(0, 3))
                 self.actions[base.cid] = t
@@ -83,25 +84,67 @@ class Brain():
         castlePoint = self.aStage.supporter.unit[UnitType.CASTLE][0].point
 
         for force in forces:
-            d = None
             check(self, force)
-            if force.cid % 10 < 5:
-                if resources and force.goal:
-                    for resource in resources:
-                        if force.point.dist(resource) < 15:
-                            force.goal = [resource]
-                            d = force.goToPoint(force.goal[0])
-                            resources.remove(resource)
-                            break
+            #生成された兵士はここで命を受ける
+            if not force.forceType:
+                # 城から生成される兵士
+                if force.point == castlePoint:
+                    force.type = ForceType(random.randint(0, 1))
+                else:
+                    force.type = ForceType(random.randint(1, 2))
 
+            # 命令の種類
+            d = None
+            # 役割の決まった兵士たちの行動
+
+            # GATEKEEPER
+            if force.forceType == ForceType.GATEKEEPER:
+                point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
+                p, strength =  self.aStage.enemies.rangeStrength(force.point, 4)
+                if strength > 1:
+                    point = p
+                d = force.goToPoint(point)
+
+            # WALKER
+            elif force.forceType == ForceType.WALKER:
+                for resource in resources:
+                    if force.point.dist(resource) < 15:
+                        force.goal = [resource]
+                        d = force.goToPoint(force.goal[0])
+                        resources.remove(resource)
+                        break
                 if not d:
                     self.aStage.castlePoint(force)
                     d = force.goToPoint(force.goal[0])
-            else:  # 防衛班
-                point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
-                d = force.goToPoint(point)
+
+            else:
+                self.aStage.castlePoint(force)
+                d = force.goToPoint(force.goal[0])
+
             if d:
                 self.actions[force.cid] = d
+
+
+            #
+            # d = None
+            # check(self, force)
+            # if force.cid % 10 < 5:
+            #     if resources and force.goal:
+            #         for resource in resources:
+            #             if force.point.dist(resource) < 15:
+            #                 force.goal = [resource]
+            #                 d = force.goToPoint(force.goal[0])
+            #                 resources.remove(resource)
+            #                 break
+            #
+            #     if not d:
+            #         self.aStage.castlePoint(force)
+            #         d = force.goToPoint(force.goal[0])
+            # else:  # 防衛班
+            #     point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
+            #     d = force.goToPoint(point)
+            # if d:
+            #     self.actions[force.cid] = d
 
     def work(self):
         # workers = [i for i in self.aStage.supporter.unit[UnitType.WORKER] if not i.isFix]

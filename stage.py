@@ -88,7 +88,8 @@ class Stage(object):
             return
 
         if character.goal and character.goal[0] == character.point:
-            character.goal.append(self.enemies.strongest())
+            strongestPoint, strength = self.enemies.strongest(character.point, 5)
+            character.goal.append(strongestPoint)
             character.goal.pop(0)
 
         if not character.goal:

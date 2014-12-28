@@ -17,7 +17,7 @@ class Character(object):
 
 
     def goToPoint(self, point):
-        if random.random() < 0.1 * (self.cid % 10) :
+        if random.random() < 0.1 * (self.cid % 10):
             if point.y - self.point.y > 0:
                 return 'D'
             if point.y - self.point.y < 0:

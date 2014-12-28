@@ -21,3 +21,7 @@ class Point(object):
     def dist(self, other):
         return abs(self.x - other.x) + abs(self.y - other.y)
 
+    def isRange(self, other, size):
+        return self.x - size < other.x < self.x + size and self.y - size < other.y < self.y + size
+
+

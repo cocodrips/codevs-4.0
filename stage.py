@@ -19,8 +19,9 @@ class Stage(object):
         self.resources = {}
         self.nearestResouces = {}
 
-        self.GRID = 4
+        self.GRID = 10
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
+
 
     def startTurn(self):
         # Initialize units.
@@ -42,7 +43,7 @@ class Stage(object):
                 minD = d
 
         if closest and character.goal:
-            if character.point.dist(character.goal[0]) < closest.dist(character.point):
+            if character.point.dist(character.goal[0]) < self.supporter.unit[UnitType.CASTLE][0].point.dist(closest):
                 closest = None
 
         if not closest:

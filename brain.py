@@ -11,6 +11,7 @@ class Brain():
     def __init__(self):
         self.aStage = stage.Stage()
         self.actions = []
+        self.exp = []
 
     def startTurn(self):
         self.aStage.startTurn()
@@ -28,29 +29,30 @@ class Brain():
         productions = copy.deepcopy(self.aStage.supporter.unit[UnitType.VILLAGE])
         productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
                                         self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
-        productions += self.aStage.supporter.unit[UnitType.CASTLE]
+        # productions += self.aStage.supporter.unit[UnitType.CASTLE]
         resources = self.aStage.resources
-        for resource, worker in resources.items():
-            if not productions:
-                return
+        # for resource, worker in resources.items():
+        #     if not productions:
+        #         return
+        #
+        #     if len(worker) >= self.aStage.workerThrehold:
+        #         continue
+        #
+        #     if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
+        #         continue
+        #
+        #     for production in productions:
+        #         if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
+        #             self.actions[production.cid] = UnitType.WORKER.value
+        #             self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+        #             productions.remove(production)
 
-            if len(worker) >= self.aStage.workerThrehold:
-                continue
+        c = self.aStage.supporter.unit[UnitType.CASTLE][0]
+        if self.aStage.enemies.aroundStrength(c.point, 5) > 10 or (len(self.aStage.supporter.unit[UnitType.WORKER])) < 40 and len(self.aStage.supporter.unit[UnitType.BASE]) < 1:
+            if self.aStage.resourceNum > 40:
+                self.actions[c.cid] = UnitType.WORKER.value
+                self.aStage.resourceNum -= 40
 
-            if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
-                continue
-
-            for production in productions:
-                if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
-                    self.actions[production.cid] = UnitType.WORKER.value
-                    self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
-                    productions.remove(production)
-
-        # 未実装／城の上に一匹だけ常駐させる
-        for production in productions:
-            if production.cid % 20 == self.aStage.turnNum % 20:
-                self.actions[production.cid] = UnitType.WORKER.value
-                self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
 
 
     def base(self):
@@ -88,10 +90,11 @@ class Brain():
             #生成された兵士はここで命を受ける
             if not force.forceType:
                 # 城から生成される兵士
-                if force.point == castlePoint:
-                    force.type = ForceType(random.randint(0, 1))
-                else:
-                    force.type = ForceType(random.randint(1, 2))
+                force.forceType = 2
+                # if force.point == castlePoint:
+                #     force.type = ForceType(random.randint(0, 1))
+                # else:
+                #     force.type = ForceType(random.randint(1, 2))
 
             # 命令の種類
             d = None
@@ -158,14 +161,21 @@ class Brain():
             if buildBase:
                 sys.stderr.write("plan {},{}\n".format(buildBase.x, buildBase.y))
 
+        basePoint = Point(0, 0)
+        for worker in workers:
+            if basePoint.x + basePoint.y < worker.point.x + worker.point.y:
+                basePoint = worker.point
+
+        strongest = self.aStage.enemies.strongest(castlePoint, 10)[0]
+
         for worker in workers:
             d = False
-            if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
-                UnitType.VILLAGE.value] and self.distToVillage(worker) > 30:
-                d = UnitType.VILLAGE.value
-                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+            # if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
+            #     UnitType.VILLAGE.value] and self.distToVillage(worker) > 50:
+            #     d = UnitType.VILLAGE.value
+            #     self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
 
-            elif worker.point == castlePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 1:
+            if worker.point == basePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 1:
                 d = UnitType.BASE.value
                 self.aStage.resourceNum -= Cost[UnitType.BASE.value]
 
@@ -177,9 +187,13 @@ class Brain():
 
             else:
                 self.checkPoint(worker)
-                if not worker.goal:
-                    self.aStage.nearestResouce(worker)
-                d = worker.goToPoint(worker.goal[0])
+                if castlePoint.isRange(worker.point, 10) and self.aStage.enemies.aroundStrength(worker.point, 4) > 100:
+                    d = worker.goToPoint(strongest)
+                else:
+                    if not worker.goal:
+                        self.aStage.nearestResouce(worker)
+                    d = worker.goToPoint(worker.goal[0])
+
 
             if d:
                 self.actions[worker.cid] = d

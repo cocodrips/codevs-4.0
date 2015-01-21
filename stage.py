@@ -96,10 +96,7 @@ class Stage(object):
         if not character.goal:
             character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 40)))
 
-    def updateUnits(self):
-        for k, v in self.resources.items():
-            self.resources[k].planner = []
-            self.resources[k].worker = [chara for chara in v.worker if chara.turn == self.turnNum]
+
 
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
@@ -119,7 +116,10 @@ class Stage(object):
         return searchPoints
 
 
-
+    # Update & Reset
+    def updateUnits(self):
+        for v in self.resources.values():
+            v.reset()
 
     # controller.py
     def updateResource(self, point):

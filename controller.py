@@ -23,7 +23,7 @@ def turnInput(aBrain, t, s):
             c.point = Point(x, y)
             c.turn = turnNum
         else:
-            units[cid] = Character(cid, y, x, hp, UnitType(utype), turnNum)
+            units[cid] = Character(cid, y, x, hp, UnitType(utype), ForceType.NEET, turnNum)
 
     # 永眠キャラを除去
     for key, unit in units.items():

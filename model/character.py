@@ -30,7 +30,6 @@ class Character(object):
             return 'D'
         if point.y - self.point.y < 0:
             return 'U'
-
         return False
 
 

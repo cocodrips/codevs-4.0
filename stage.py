@@ -49,7 +49,7 @@ class Stage(object):
         if not closest:
             if not character.goal:
                 point = self.randomAction(character)
-                if not point: # 全部回ってると起動するか考える
+                if not point:  # 全部回ってると起動するか考える
                     return character.goal.append(character.point)
 
                 character.goal.append(Point(point.x, character.point.y))
@@ -84,7 +84,7 @@ class Stage(object):
     def castlePoint(self, character):
         castle = self.enemies.unit[UnitType.CASTLE.value]
         if castle:
-            character.goal = [castle[0].point]
+            character.goal = [castle[0].point.plus(Point(-character.cid % 3, - (2 - character.cid % 3)))]
             character.isFix = True
             return
 
@@ -116,4 +116,5 @@ class Stage(object):
                     searchPoints.append(Point(i * MAPSIZE, j * MAPSIZE))
         self._searchPoints = searchPoints
         return searchPoints
+
 

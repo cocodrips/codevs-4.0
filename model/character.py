@@ -4,7 +4,7 @@ import random
 
 
 class Character(object):
-    def __init__(self, cid, y, x, hp, type, turn=0):
+    def __init__(self, cid, y, x, hp, type, forceType=ForceType.NEET, turn=0):
         self.cid = cid
         self.point = Point(x, y)
         self.hp = hp
@@ -13,7 +13,7 @@ class Character(object):
         self.turn = turn
         self.isFix = False
         self.group = []
-        self.forceType = None
+        self.forceType = forceType
 
 
     def goToPoint(self, point):

@@ -1,5 +1,5 @@
 import enum
-
+import copy
 
 class UnitType(enum.IntEnum):
     WORKER = 0
@@ -16,6 +16,8 @@ class ForceType(enum.IntEnum):
     ATTACKER = 2
     HOUSE_SITTING = 3
     EXPLORER = 4
+    PIONEER = 5
+    NEET = 6
 
 
 
@@ -25,3 +27,11 @@ AttackRange = [2, 2, 2, 2, 10, 2, 2]
 Strength = [100, 100, 500, 1000, 100, 100, 100]
 INF = 100000000
 MAPSIZE = 100
+
+
+def cp(f):
+    def func(bool):
+        if bool:
+            return copy.deepcopy(f(bool))
+        return f()
+    return func

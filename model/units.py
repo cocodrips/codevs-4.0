@@ -10,6 +10,7 @@ class Units:
         self.units = {}
         self.castle = None
         self.unit = [[] for unitType in UnitType]
+        self.forceUnits = [[] for forceType in ForceType]
 
     def turnInitialize(self, turnNum=10):
         self.unit = [[] for unitType in UnitType]
@@ -20,17 +21,12 @@ class Units:
             i = 0
             zero = self.unit[UnitType.CASTLE][0].point
             for k, worker in enumerate(self.unit[UnitType.WORKER]):
-                # for i in xrange(50):
-                #     worker.goal.append(zero.plus(Point(k * 11 + i, i)))
+                worker.forceType = ForceType.PIONEER
                 width = i * 9
-                worker.goal = [Point(width + 2, zero.y),
-                               Point(width + 2, 99 - 15 * i)]
+                worker.goal = [Point(width + 2, max(0, zero.y - i * 5)),
+                               Point(width + 2, 99 - 11 * i)]
                 i += 1
-            worker.goal.append(Point(95, 99 - 15 * i))
-            # worker.goal.append(Point(i * 18 + 2, 99 - 15 * i))
-            # worker.goal.append(Point(i * 18 + 11, 99 - 15 * i))
-            # worker.goal.append(Point(i * 18 + 11, 0))
-
+            worker.goal.append(Point(95, 99))
 
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]

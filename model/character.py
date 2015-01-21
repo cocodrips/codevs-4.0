@@ -33,8 +33,9 @@ class Character(object):
 
         return False
 
-    def distanceToCharacter(self, character):
-        pass
 
     def closest(self, field):
         pass
+
+    def isAround(self, obj, range):
+        return self.point.dist(obj) <= range

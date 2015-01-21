@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from codevs import *
-from model import Point, Units
+from model import Point, Units, Resource
 import random
 
 
@@ -98,7 +98,8 @@ class Stage(object):
 
     def updateUnits(self):
         for k, v in self.resources.items():
-            self.resources[k] = [chara for chara in v if chara.turn == self.turnNum]
+            self.resources[k].planner = []
+            self.resources[k].worker = [chara for chara in v.worker if chara.turn == self.turnNum]
 
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
@@ -118,3 +119,12 @@ class Stage(object):
         return searchPoints
 
 
+
+
+    # controller.py
+    def updateResource(self, point):
+        """
+        Call from controller.py.
+        """
+        if point not in self.resources:
+            self.resources[point] = Resource(point)

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import enum
 import copy
 
@@ -17,7 +19,8 @@ class ForceType(enum.IntEnum):
     HOUSE_SITTING = 3
     EXPLORER = 4
     PIONEER = 5
-    NEET = 6
+    WORKER = 6
+    NEET = 7
 
 
 
@@ -29,9 +32,23 @@ INF = 100000000
 MAPSIZE = 100
 
 
-def cp(f):
-    def func(bool):
-        if bool:
-            return copy.deepcopy(f(bool))
-        return f()
-    return func
+# Distance
+def distToUnits(src, targets):
+    """
+    あるユニット(複数)への距離
+    args: character, characters
+    return: オブジェクト
+    """
+    if not targets or not src:
+        return INF
+    return min([src.point.dist(target.point) for target in targets])
+
+def closestUnit(src, targets):
+    """
+    あるユニット(複数)への距離が１番近いやつ
+    args: character, characters
+    return: オブジェクト
+    """
+    if not targets or not src:
+        return None
+    return min(targets, key=lambda target: src.point.dist(target.point))

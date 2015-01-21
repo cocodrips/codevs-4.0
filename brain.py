@@ -43,19 +43,22 @@ class Brain():
     @property
     def castle(self):
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
-
     ################################################
 
 
     def product(self):
         productions = copy.deepcopy(self.productions)
-        # print >> sys.stderr, [r.workers for r in self.aStage.resources.values()]
-        for production in productions:
-            if production.point in self.aStage.resources and len(self.aStage.resources[production.point].workers) < self.aStage.workerThrehold:
-                # print >> sys.stderr, production.point, len(self.aStage.resources[production.point].workers)
-                if self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
-                    self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
-                    self.actions[production.cid] = UnitType.WORKER.value
+
+        emptyResources = self.aStage.emptyResources()
+        canGenerateProductions = set()
+        for r in emptyResources:
+            canGenerateProductions.add(closestUnit(r, productions))
+
+        for p in canGenerateProductions:
+            if self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
+                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+                self.actions[p.cid] = UnitType.WORKER.value
+
 
         # productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
         #                                 self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
@@ -166,7 +169,7 @@ class Brain():
                 self.actions[force.cid] = d
 
     def work(self):
-        workers = self.unit(UnitType.WORKER)
+        workers = self.unit(UnitType.WORKER)[:]
 
         def actPioneer(self, worker):
             """
@@ -184,7 +187,7 @@ class Brain():
                     cResource.planners.append(worker)
                     worker.goal.insert(0, cResource.point)
 
-            if cResource and cResource.point == worker.point and distToUnits(worker, self.productions) >= 40 and self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
+            if cResource and cResource.point == worker.point and distToUnits(worker, self.productions) >= 20 and self.aStage.resourceNum >= Range[UnitType.VILLAGE.value]:
                 self.actions[worker.cid] = UnitType.VILLAGE.value
                 self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
 
@@ -195,24 +198,85 @@ class Brain():
             else:
                 worker.forceType = ForceType.WORKER
 
+        def rtTable(self, workers):
+            """
+            資源-ワーカ が近い順リストを作る
+            """
+            table = []
+            for r in self.aStage.resources.values():
+                for w in workers:
+                    d = w.point.dist(r.point)
+                    table.append((d, r, w))
+            table.sort()
+            return table
+
+        def actWorker(self, fWorkers):
+            table = rtTable(self, fWorkers)
+            used = set()
+            for t in table:
+                # 0: distance, 1:resource, 2:worker
+                if t[2] not in used and len(t[1].volunteer) < self.aStage.workerThrehold:
+                    d = t[2].goToPoint(t[1].point)
+                    used.add(t[2])
+                    if d:
+                        self.actions[t[2].cid] = d
+                        t[1].planners.append(t[2])
+                    else: # on resource
+                        t[1].workers.append(t[2])
+
+        # 基地を建てる
+        if Cost[UnitType.BASE] <= self.aStage.resourceNum:
+            zero = Point(MAPSIZE, MAPSIZE)
+            worker = min(workers, key=lambda x:x.point.dist(zero))
+            self.actions[worker.cid] = UnitType.BASE.value
+            self.aStage.resourceNum -= Cost[UnitType.BASE]
+            workers.remove(worker)
+
+        # Pioneer
         pioneers = self.forceUnit(workers, ForceType.PIONEER)
         for pioneer in pioneers:
             actPioneer(self, pioneer)
 
+        # ニートは強制的に労働者ににジョブチェンジ
         neets = self.forceUnit(workers, ForceType.NEET)
         for neet in neets:
             neet.forceType = ForceType.WORKER
 
+        # 労働者の配分をする
         fWorkers = self.forceUnit(workers, ForceType.WORKER)
-        for worker in fWorkers:
-            if self.aStage.resources.get(worker.point):
-                self.aStage.resources[worker.point].workers.append(worker)
+        actWorker(self, fWorkers)
 
 
 
 
 
-        # pioneers = self.forceUnit(workers, ForceType.PIONEER)
+
+        #
+        # for worker in fWorkers:
+        #
+        #
+        #
+        #
+        #     if self.aStage.resources.get(worker.point) and len(self.aStage.resources[worker.point].volunteer) < self.aStage.workerThrehold:
+        #         self.aStage.resources[worker.point].workers.append(worker)
+        #
+        #     else:
+        #         table = rtTable()
+        #         if emptyResources:
+        #             closest = min(emptyResources, key=lambda r:r.point.dist(worker.point))
+        #             d = worker.goToPoint(closest.point)
+        #             if d:
+        #                 self.actions[worker.cid] = d
+        #                 closest.planners.append(worker)
+        #                 if len(closest.volunteer) >= self.aStage.workerThrehold:
+        #                     emptyResources.remove(closest)
+        #
+
+
+
+
+
+                    # pioneers = self.forceUnit(workers, ForceType.PIONEER)
 
 
             # for worker in workers:

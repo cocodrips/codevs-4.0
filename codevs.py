@@ -31,7 +31,6 @@ Strength = [100, 100, 500, 1000, 100, 100, 100]
 INF = 100000000
 MAPSIZE = 100
 
-
 # Distance
 def distToUnits(src, targets):
     """

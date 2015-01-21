@@ -115,6 +115,8 @@ class Stage(object):
         self._searchPoints = searchPoints
         return searchPoints
 
+    def emptyResources(self):
+        return [r for r in self.resources.values() if len(r.volunteer) < self.workerThrehold]
 
     # Update & Reset
     def updateUnits(self):

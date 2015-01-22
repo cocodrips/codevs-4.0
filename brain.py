@@ -20,6 +20,7 @@ class Brain():
         # for i in xrange(MAPSIZE / width):
         # self.pioneerGoal.append([Point(width * i + 2, max(Range[UnitType.WORKER.value], zero.y - i * 5)), Point(width * i + 2, 99 - Range[UnitType.WORKER.value] - 5 * i)])
         # Point(width * i + 2, max(0, zero.y - i * 5))
+        # Random
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
                 self.pioneerMap.append(Point(j, i))
@@ -205,6 +206,25 @@ class Brain():
                 worker.forceType = ForceType.WORKER
                 return
 
+        def selectPioneer(self, workers):
+            pioneers = self.forceUnit(workers, ForceType.PIONEER)
+            i = len(pioneers)
+            table = pTable(self, workers)
+            usedWorker, usedPoint = [], []
+
+            for dist, point, worker in table:
+                if worker in usedWorker or point in usedPoint:
+                    continue
+                if i > 5:
+                    break
+                usedWorker.append(worker)
+                usedPoint.append(point)
+                self.pioneerMap.remove(point)
+                worker.forceType = ForceType.PIONEER
+                worker.goal.append(point)
+                i+=1
+
+
         def actPioneer(self, worker):
             """
             PIONEER
@@ -284,8 +304,8 @@ class Brain():
             self.aStage.resourceNum -= Cost[UnitType.BASE]
             workers.remove(worker)
 
+        # worker 初期化
         workers = self.unit(UnitType.WORKER)[:]
-
         for worker in workers:
             turnStart(self, worker)
 
@@ -293,33 +313,14 @@ class Brain():
         # if Cost[UnitType.BASE] + 200 <= self.aStage.resourceNum and len(self.unit(UnitType.BASE)) < 1:
         # buildBase(self, workers)
 
-        # 5人のPioneer
-        pioneers = self.forceUnit(workers, ForceType.PIONEER)
-        i = len(pioneers)
-        table = pTable(self, workers)
-        usedWorker, usedPoint = [], []
+        # どれをPioneerか決める
+        selectPioneer(self, workers)
 
-        for dist, point, worker in table:
-            if worker in usedWorker or point in usedPoint:
-                continue
-            if i > 5:
-                break
-            usedWorker.append(worker)
-            usedPoint.append(point)
-            self.pioneerMap.remove(point)
-            worker.forceType = ForceType.PIONEER
-            worker.goal.append(point)
-            i+=1
-
-        # Pioneer
+        # Pioneerの行動
         pioneers = self.forceUnit(workers, ForceType.PIONEER)
         for pioneer in pioneers:
             actPioneer(self, pioneer)
 
-        # pioneers = self.forceUnit(workers, ForceType.PIONEER)
-        # print >> sys.stderr, self.aStage.turnNum
-        # for p in pioneers:
-        #     print >> sys.stderr, p.goal[0]
 
         # ニートは強制ジョブチェンジ
         neets = self.forceUnit(workers, ForceType.NEET)

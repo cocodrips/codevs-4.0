@@ -5,6 +5,7 @@ import stage
 import random
 import sys
 import copy
+import random
 
 
 class Brain():
@@ -12,6 +13,19 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
+        self.pioneerMap = []
+
+        width = Range[UnitType.WORKER.value] * 2 + 1
+        zero = Point(Range[UnitType.WORKER.value], Range[UnitType.WORKER.value])
+        # for i in xrange(MAPSIZE / width):
+        # self.pioneerGoal.append([Point(width * i + 2, max(Range[UnitType.WORKER.value], zero.y - i * 5)), Point(width * i + 2, 99 - Range[UnitType.WORKER.value] - 5 * i)])
+        # Point(width * i + 2, max(0, zero.y - i * 5))
+        for i in xrange(4, MAPSIZE, 9):
+            for j in xrange(4, MAPSIZE, 9):
+                self.pioneerMap.append(Point(j, i))
+
+        random.shuffle(self.pioneerMap)
+
 
     def startTurn(self):
         self.aStage.startTurn()
@@ -19,6 +33,9 @@ class Brain():
         self.ai()
 
     def ai(self):
+        """
+        それぞれのユニットの命令を呼び出す
+        """
         # 順番考える
         self.work()
         self.product()
@@ -43,51 +60,65 @@ class Brain():
     @property
     def castle(self):
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
+
     ################################################
 
 
     def product(self):
-        productions = copy.deepcopy(self.productions)
+        def generate(self, production):
+            if self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
+                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+                self.actions[production.cid] = UnitType.WORKER.value
+                print >> sys.stderr, "production", production.cid
+                return True
+            return False
+
+        productions = self.productions[:]
 
         emptyResources = self.aStage.emptyResources()
         canGenerateProductions = set()
         for r in emptyResources:
-            canGenerateProductions.add(closestUnit(r, productions))
+            if distToUnits(r.point, productions) < PRODUCTION_INTERVAL:
+                canGenerateProductions.add(closestUnit(r.point, productions))
 
+        print >> sys.stderr, self.aStage.turnNum, self.aStage.resourceNum, canGenerateProductions
         for p in canGenerateProductions:
-            if self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
-                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
-                self.actions[p.cid] = UnitType.WORKER.value
+            generate(self, p)
+
+            # if self.pioneerGoal:
+            # for p in (set(productions) - canGenerateProductions):
+            #         generate(self, p)
 
 
-        # productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
-        #                                 self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
 
-        # productions += self.aStage.supporter.unit[UnitType.CASTLE]
-        # resources = self.aStage.resources
-        # for resource, worker in resources.items():
-        #     if not productions:
-        #         return
-        #
-        #     if len(worker) >= self.aStage.workerThrehold:
-        #         continue
-        #
-        #     if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
-        #         continue
-        #
-        #     for production in productions:
-        #         if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
-        #             self.actions[production.cid] = UnitType.WORKER.value
-        #             self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
-        #             productions.remove(production)
-        #
-        # c = self.aStage.supporter.unit[UnitType.CASTLE][0]
-        # # for production in productions:
-        # if self.aStage.enemies.aroundStrength(c.point, 5) > 10 \
-        #     or (len(self.aStage.supporter.unit[UnitType.WORKER])) < 40 and len(self.aStage.supporter.unit[UnitType.BASE]) < 1:
-        #     if self.aStage.resourceNum > 40:
-        #         self.actions[c.cid] = UnitType.WORKER.value
-        #         self.aStage.resourceNum -= 40
+            # productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
+            # self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
+
+            # productions += self.aStage.supporter.unit[UnitType.CASTLE]
+            # resources = self.aStage.resources
+            # for resource, worker in resources.items():
+            #     if not productions:
+            #         return
+            #
+            #     if len(worker) >= self.aStage.workerThrehold:
+            #         continue
+            #
+            #     if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
+            #         continue
+            #
+            #     for production in productions:
+            #         if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
+            #             self.actions[production.cid] = UnitType.WORKER.value
+            #             self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
+            #             productions.remove(production)
+            #
+            # c = self.aStage.supporter.unit[UnitType.CASTLE][0]
+            # # for production in productions:
+            # if self.aStage.enemies.aroundStrength(c.point, 5) > 10 \
+            #     or (len(self.aStage.supporter.unit[UnitType.WORKER])) < 40 and len(self.aStage.supporter.unit[UnitType.BASE]) < 1:
+            #     if self.aStage.resourceNum > 40:
+            #         self.actions[c.cid] = UnitType.WORKER.value
+            #         self.aStage.resourceNum -= 40
 
 
     def base(self):
@@ -123,10 +154,9 @@ class Brain():
             return
         basePoint = self.aStage.supporter.unit[UnitType.BASE][0].point
 
-
         for force in forces:
             check(self, force)
-            #生成された兵士はここで命を受ける
+            # 生成された兵士はここで命を受ける
             if not force.forceType:
                 # 城から生成される兵士
                 if force.point == basePoint and self.aStage.turnNum % 10 != 0:
@@ -144,7 +174,7 @@ class Brain():
             # GATEKEEPER
             if force.forceType == ForceType.GATEKEEPER:
                 point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
-                p, strength =  self.aStage.enemies.rangeStrength(force.point, 4)
+                p, strength = self.aStage.enemies.rangeStrength(force.point, 4)
                 if strength > 1:
                     point = p
                 d = force.goToPoint(point)
@@ -169,7 +199,11 @@ class Brain():
                 self.actions[force.cid] = d
 
     def work(self):
-        workers = self.unit(UnitType.WORKER)[:]
+        def turnStart(self, worker):
+            self.checkPoint(worker)
+            if not worker.goal:
+                worker.forceType = ForceType.WORKER
+                return
 
         def actPioneer(self, worker):
             """
@@ -177,19 +211,22 @@ class Brain():
                 0. 目的地へ
                 1. 目の前に他の家から40以上離れてる資源を見つけたらそこに家を建てる
             """
-            self.checkPoint(worker)
 
-            cResource = closestUnit(worker, self.resources)
+            cResource = closestUnit(worker.point, self.resources)
             # リソース <= 2 and 他の町 >= 40
-            if cResource and cResource.point.dist(worker.point) <= AttackRange[UnitType.WORKER] and distToUnits(cResource, self.productions) >= 40:
+            if cResource and cResource.point.dist(worker.point) <= Range[UnitType.WORKER] and distToUnits(
+                cResource.point, self.productions) >= PRODUCTION_INTERVAL * 1.5:
                 # 他に資源に向かってる者がいない
                 if len(cResource.volunteer) <= 0:
                     cResource.planners.append(worker)
                     worker.goal.insert(0, cResource.point)
 
-            if cResource and cResource.point == worker.point and distToUnits(worker, self.productions) >= 20 and self.aStage.resourceNum >= Range[UnitType.VILLAGE.value]:
-                self.actions[worker.cid] = UnitType.VILLAGE.value
-                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+            if cResource and cResource.point == worker.point and distToUnits(worker.point,
+                                                                             self.productions) >= PRODUCTION_INTERVAL:
+                # 資源なかったらお留守番
+                if self.aStage.resourceNum >= Range[UnitType.VILLAGE.value]:
+                    self.actions[worker.cid] = UnitType.VILLAGE.value
+                    self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
 
             elif worker.goal:
                 d = worker.goToPoint(worker.goal[0])
@@ -197,6 +234,20 @@ class Brain():
                     self.actions[worker.cid] = d
             else:
                 worker.forceType = ForceType.WORKER
+
+        def pTable(self, workers):
+            """
+            未開地とworkersの距離をはかる
+            """
+            table = []
+            for p in self.pioneerMap:
+                for w in workers:
+                    if w.forceType != ForceType.PIONEER:
+                        d = w.point.dist(p)
+                        table.append((d, p, w))
+
+            table.sort()
+            return table
 
         def rtTable(self, workers):
             """
@@ -207,10 +258,12 @@ class Brain():
                 for w in workers:
                     d = w.point.dist(r.point)
                     table.append((d, r, w))
-            table.sort()
-            return table
+            return sorted(table)
 
         def actWorker(self, fWorkers):
+            """
+            Workerの動きを決定する
+            """
             table = rtTable(self, fWorkers)
             used = set()
             for t in table:
@@ -221,138 +274,63 @@ class Brain():
                     if d:
                         self.actions[t[2].cid] = d
                         t[1].planners.append(t[2])
-                    else: # on resource
+                    else:  # on resource
                         t[1].workers.append(t[2])
 
-        # 基地を建てる
-        if Cost[UnitType.BASE] <= self.aStage.resourceNum:
+        def buildBase(self, workers):
             zero = Point(MAPSIZE, MAPSIZE)
-            worker = min(workers, key=lambda x:x.point.dist(zero))
+            worker = min(workers, key=lambda x: x.point.dist(zero))
             self.actions[worker.cid] = UnitType.BASE.value
             self.aStage.resourceNum -= Cost[UnitType.BASE]
             workers.remove(worker)
+
+        workers = self.unit(UnitType.WORKER)[:]
+
+        for worker in workers:
+            turnStart(self, worker)
+
+        # 基地を建てる
+        # if Cost[UnitType.BASE] + 200 <= self.aStage.resourceNum and len(self.unit(UnitType.BASE)) < 1:
+        # buildBase(self, workers)
+
+        # 5人のPioneer
+        pioneers = self.forceUnit(workers, ForceType.PIONEER)
+        i = len(pioneers)
+        table = pTable(self, workers)
+        usedWorker, usedPoint = [], []
+
+        for dist, point, worker in table:
+            if worker in usedWorker or point in usedPoint:
+                continue
+            if i > 5:
+                break
+            usedWorker.append(worker)
+            usedPoint.append(point)
+            self.pioneerMap.remove(point)
+            worker.forceType = ForceType.PIONEER
+            worker.goal.append(point)
+            i+=1
 
         # Pioneer
         pioneers = self.forceUnit(workers, ForceType.PIONEER)
         for pioneer in pioneers:
             actPioneer(self, pioneer)
 
-        # ニートは強制的に労働者ににジョブチェンジ
+        # pioneers = self.forceUnit(workers, ForceType.PIONEER)
+        # print >> sys.stderr, self.aStage.turnNum
+        # for p in pioneers:
+        #     print >> sys.stderr, p.goal[0]
+
+        # ニートは強制ジョブチェンジ
         neets = self.forceUnit(workers, ForceType.NEET)
         for neet in neets:
             neet.forceType = ForceType.WORKER
+
 
         # 労働者の配分をする
         fWorkers = self.forceUnit(workers, ForceType.WORKER)
         actWorker(self, fWorkers)
 
-
-
-
-
-
-        #
-        # for worker in fWorkers:
-        #
-        #
-        #
-        #
-        #     if self.aStage.resources.get(worker.point) and len(self.aStage.resources[worker.point].volunteer) < self.aStage.workerThrehold:
-        #         self.aStage.resources[worker.point].workers.append(worker)
-        #
-        #     else:
-        #         table = rtTable()
-        #         if emptyResources:
-        #             closest = min(emptyResources, key=lambda r:r.point.dist(worker.point))
-        #             d = worker.goToPoint(closest.point)
-        #             if d:
-        #                 self.actions[worker.cid] = d
-        #                 closest.planners.append(worker)
-        #                 if len(closest.volunteer) >= self.aStage.workerThrehold:
-        #                     emptyResources.remove(closest)
-        #
-
-
-
-
-
-                    # pioneers = self.forceUnit(workers, ForceType.PIONEER)
-
-
-            # for worker in workers:
-        #     if worker.forceType == ForceType.PIONEER:
-        #         actPioneer(self, worker)
-        #     if worker.forceType == ForceType.WORKER:
-        #         actWorker(self, worker)
-
-
-            # buildBase = None
-        # if Cost[UnitType.BASE.value] < self.aStage.resourceNum:
-        #     buildBase = self.safetyVillage()
-        #     if buildBase:
-        #         sys.stderr.write("plan {},{}\n".format(buildBase.x, buildBase.y))
-        #
-        # basePoint = Point(0, 0)
-        # for worker in workers:
-        #     if basePoint.x + basePoint.y < worker.point.x + worker.point.y:
-        #         basePoint = worker.point
-        #
-        # strongest = self.aStage.enemies.strongest(castlePoint, 10)[0]
-
-        # for worker in workers:
-        #     d = False
-        #     # if worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[
-        #     #     UnitType.VILLAGE.value] and self.distToVillage(worker) > 50:
-        #     #     d = UnitType.VILLAGE.value
-        #     #     self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
-        #
-        #     if worker.forceType == ForceType.PIONEER and worker.point in self.aStage.resources and self.aStage.resourceNum > Cost[UnitType.VILLAGE.value] and self.distToVillage(worker) > 50:
-        #         d = UnitType.VILLAGE.value
-        #         self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
-        #
-        #     elif worker.point == basePoint and self.aStage.resourceNum > Cost[UnitType.BASE.value] and len(bases) < 1:
-        #         d = UnitType.BASE.value
-        #         self.aStage.resourceNum -= Cost[UnitType.BASE.value]
-        #
-        #     elif buildBase and worker.point == buildBase and len(bases) > 0:
-        #         sys.stderr.write("{}, {}\n".format(buildBase.x, buildBase.y))
-        #         d = UnitType.BASE.value
-        #         self.aStage.resourceNum -= Cost[UnitType.BASE.value]
-        #         buildBase = None
-        #
-        #     else:
-        #         self.checkPoint(worker)
-        #         if castlePoint.isRange(worker.point, 10) and self.aStage.enemies.aroundStrength(worker.point, 4) > 100:
-        #             d = worker.goToPoint(strongest)
-        #         else:
-        #             if not worker.goal:
-        #                 self.aStage.nearestResouce(worker)
-        #             d = worker.goToPoint(worker.goal[0])
-        #
-        #
-        #     if d:
-        #         self.actions[worker.cid] = d
-
     def checkPoint(self, character):
-        if not character.isFix and character.goal and character.goal[0] == character.point:
+        if character.goal and character.goal[0] == character.point:
             character.goal.pop(0)
-    #
-    # def distToVillage(self, character):
-    #     d = INF
-    #     for v in self.aStage.supporter.unit[UnitType.CASTLE] + self.aStage.supporter.unit[UnitType.VILLAGE]:
-    #         d = min(d, character.point.dist(v.point))
-    #     return d
-    #
-    # def safetyVillage(self):
-    #     strength = 10000
-    #     villange = None
-    #     for v in self.aStage.supporter.unit[UnitType.VILLAGE]:
-    #         s = self.aStage.enemies.aroundStrength(v.point, 10)
-    #         if s < strength:
-    #             strength = s
-    #             villange = v
-    #     if villange:
-    #         return villange.point
-    #     return None
-    #
-    #

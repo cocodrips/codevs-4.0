@@ -17,16 +17,6 @@ class Units:
         self.update()
         self._aroundStrength = {}
         self._strongest = {}
-        if turnNum == 0:
-            i = 0
-            zero = self.unit[UnitType.CASTLE][0].point
-            for k, worker in enumerate(self.unit[UnitType.WORKER]):
-                worker.forceType = ForceType.PIONEER
-                width = i * 9
-                worker.goal = [Point(width + 2, max(0, zero.y - i * 5)),
-                               Point(width + 2, 99 - 11 * i)]
-                i += 1
-            worker.goal.append(Point(95, 99))
 
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]

@@ -31,23 +31,26 @@ Strength = [100, 100, 500, 1000, 100, 100, 100]
 INF = 100000000
 MAPSIZE = 100
 
+# 町をどれくらいの間隔で作るか
+PRODUCTION_INTERVAL = 20
+
 # Distance
-def distToUnits(src, targets):
+def distToUnits(point, targets):
     """
     あるユニット(複数)への距離
     args: character, characters
-    return: オブジェクト
+    return: 距離(int)
     """
-    if not targets or not src:
+    if not targets or not point:
         return INF
-    return min([src.point.dist(target.point) for target in targets])
+    return min([point.dist(target.point) for target in targets])
 
-def closestUnit(src, targets):
+def closestUnit(point, targets):
     """
     あるユニット(複数)への距離が１番近いやつ
     args: character, characters
-    return: オブジェクト
+    return: オブジェクト(Character)
     """
-    if not targets or not src:
+    if not targets or not point:
         return None
-    return min(targets, key=lambda target: src.point.dist(target.point))
+    return min(targets, key=lambda target: point.dist(target.point))

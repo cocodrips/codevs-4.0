@@ -9,8 +9,8 @@ class Point(object):
     def __repr__(self):
         return "({},{})".format(self.x, self.y)
 
-    def __cmp__(self):
-        return self.x + self.y
+    def __cmp__(self, other):
+        return (self.x + self.y) - (other.x + other.y)
 
     def __hash__(self):
         return self.x * 1000 + self.y

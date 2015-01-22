@@ -9,11 +9,11 @@ class Units:
         self.strengthMap = {}
         self.units = {}
         self.castle = None
-        self.unit = [[] for unitType in UnitType]
-        self.forceUnits = [[] for forceType in ForceType]
+        self.unit = [[] for _ in UnitType]
+        self.forceUnits = [[] for _ in ForceType]
 
     def turnInitialize(self, turnNum=10):
-        self.unit = [[] for unitType in UnitType]
+        self.unit = [[] for _ in UnitType]
         self.update()
         self._aroundStrength = {}
         self._strongest = {}

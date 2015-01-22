@@ -33,10 +33,13 @@ class Brain():
         self.actions = {}
         self.ai()
 
+
     def ai(self):
         """
         それぞれのユニットの命令を呼び出す
         """
+        print >> sys.stderr, self.aStage.turnNum, len(self.pioneerMap)
+
         # 順番考える
         self.work()
         self.product()
@@ -61,16 +64,14 @@ class Brain():
     @property
     def castle(self):
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
-
     ################################################
 
 
     def product(self):
         def generate(self, production):
-            if self.aStage.resourceNum >= Cost[UnitType.VILLAGE.value]:
-                self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+            if self.aStage.resourceNum >= Cost[UnitType.WORKER.value]:
+                self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
                 self.actions[production.cid] = UnitType.WORKER.value
-                print >> sys.stderr, "production", production.cid
                 return True
             return False
 
@@ -82,7 +83,6 @@ class Brain():
             if distToUnits(r.point, productions) < PRODUCTION_INTERVAL:
                 canGenerateProductions.add(closestUnit(r.point, productions))
 
-        print >> sys.stderr, self.aStage.turnNum, self.aStage.resourceNum, canGenerateProductions
         for p in canGenerateProductions:
             generate(self, p)
 
@@ -224,7 +224,6 @@ class Brain():
                 worker.goal.append(point)
                 i+=1
 
-
         def actPioneer(self, worker):
             """
             PIONEER
@@ -286,16 +285,19 @@ class Brain():
             """
             table = rtTable(self, fWorkers)
             used = set()
-            for t in table:
+            for dist, resource, worker in table:
                 # 0: distance, 1:resource, 2:worker
-                if t[2] not in used and len(t[1].volunteer) < self.aStage.workerThrehold:
-                    d = t[2].goToPoint(t[1].point)
-                    used.add(t[2])
+                if worker not in used and len(resource.volunteer) < self.aStage.workerThrehold:
+                    d = worker.goToPoint(resource.point)
+                    used.add(worker)
                     if d:
-                        self.actions[t[2].cid] = d
-                        t[1].planners.append(t[2])
+                        self.actions[worker.cid] = d
+                        resource.planners.append(worker)
                     else:  # on resource
-                        t[1].workers.append(t[2])
+                        if distToUnits(worker.point, self.productions) >= PRODUCTION_INTERVAL:
+                            self.actions[worker.cid] = UnitType.VILLAGE.value
+                            self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+                        resource.workers.append(worker)
 
         def buildBase(self, workers):
             zero = Point(MAPSIZE, MAPSIZE)
@@ -321,12 +323,10 @@ class Brain():
         for pioneer in pioneers:
             actPioneer(self, pioneer)
 
-
         # ニートは強制ジョブチェンジ
         neets = self.forceUnit(workers, ForceType.NEET)
         for neet in neets:
             neet.forceType = ForceType.WORKER
-
 
         # 労働者の配分をする
         fWorkers = self.forceUnit(workers, ForceType.WORKER)

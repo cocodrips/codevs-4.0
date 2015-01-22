@@ -234,7 +234,7 @@ class Brain():
             cResource = closestUnit(worker.point, self.resources)
             # リソース <= 2 and 他の町 >= 40
             if cResource and cResource.point.dist(worker.point) <= Range[UnitType.WORKER] and distToUnits(
-                cResource.point, self.productions) >= PRODUCTION_INTERVAL * 1.5:
+                cResource.point, self.productions) >= PRODUCTION_INTERVAL:
                 # 他に資源に向かってる者がいない
                 if len(cResource.volunteer) <= 0:
                     cResource.planners.append(worker)

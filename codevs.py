@@ -33,7 +33,8 @@ MAPSIZE = 100
 
 # 町をどれくらいの間隔で作るか
 PRODUCTION_INTERVAL = 40
-PIONEER_NUM = 8
+PIONEER_NUM = 5
+INCOME = 40
 
 # Distance
 def distToUnits(point, targets):
@@ -55,3 +56,4 @@ def closestUnit(point, targets):
     if not targets or not point:
         return None
     return min(targets, key=lambda target: point.dist(target.point))
+

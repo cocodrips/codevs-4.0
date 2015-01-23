@@ -13,6 +13,7 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
+        self.bet = [Point(MAPSIZE - 1, MAPSIZE - 1)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
@@ -33,13 +34,13 @@ class Brain():
         """
         それぞれのユニットの命令を呼び出す
         """
-        print >> sys.stderr, self.aStage.turnNum, len(self.pioneerMap)
-
+        self.isAttack = len(self.unit(UnitType.WORKER)) > INCOME
+        print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
         # 順番考える
         self.work()
         self.product()
-        # self.base()
-        # self.force()
+        self.base()
+        self.force()
 
     ###############################################
     def unit(self, unitType):
@@ -59,12 +60,16 @@ class Brain():
     @property
     def castle(self):
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
+
     ################################################
 
 
     def product(self):
         def generate(self, production):
-            if self.aStage.resourceNum >= Cost[UnitType.WORKER.value]:
+            # 何度も呼ぶので無駄
+            margin = len(self.unit(UnitType.BASE)) * Cost[UnitType.ASSASSIN.value] + Cost[UnitType.WORKER.value]
+
+            if self.aStage.resourceNum >= margin:
                 self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
                 self.actions[production.cid] = UnitType.WORKER.value
                 return True
@@ -83,7 +88,7 @@ class Brain():
 
             # if self.pioneerGoal:
             # for p in (set(productions) - canGenerateProductions):
-            #         generate(self, p)
+            # generate(self, p)
 
 
 
@@ -93,7 +98,7 @@ class Brain():
             # productions += self.aStage.supporter.unit[UnitType.CASTLE]
             # resources = self.aStage.resources
             # for resource, worker in resources.items():
-            #     if not productions:
+            # if not productions:
             #         return
             #
             #     if len(worker) >= self.aStage.workerThrehold:
@@ -136,8 +141,8 @@ class Brain():
 
         def unsafetyResource(self):
             r = []
-            for resource in self.aStage.resources:
-                s = self.aStage.enemies.aroundStrength(resource, 10)
+            for resource in self.resources:
+                s = self.aStage.enemies.aroundStrength(resource.point, 10)
                 if 100 < s:
                     r.append(resource)
             return r
@@ -153,20 +158,20 @@ class Brain():
         for force in forces:
             check(self, force)
             # 生成された兵士はここで命を受ける
-            if not force.forceType:
+            if force.forceType == ForceType.NEET:
                 # 城から生成される兵士
                 if force.point == basePoint and self.aStage.turnNum % 10 != 0:
                     continue
                 else:
-                    if random.randint(0, 15) == 0:
-                        force.forceType = 1
+                    if force.type == UnitType.ASSASSIN and random.randint(0, 2) == 0:
+                        force.forceType = ForceType.HOUSE_SITTING
                     else:
-                        force.forceType = 2
+                        force.forceType = ForceType.ATTACKER
+
 
             # 命令の種類
             d = None
             # 役割の決まった兵士たちの行動
-
             # GATEKEEPER
             if force.forceType == ForceType.GATEKEEPER:
                 point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
@@ -175,8 +180,20 @@ class Brain():
                     point = p
                 d = force.goToPoint(point)
 
+            if force.forceType == ForceType.HOUSE_SITTING:
+                if not force.goal and resources:
+                    # closest = closestUnit(resources)
+                    force.goal.append(resources.pop(random.randint(0, len(resources)-1)).point)
+                if force.goal:
+                    d = force.goToPoint(force.goal[0])
+                else:
+                    force.forceType == ForceType.ATTACKER
+                    if not force.goal and resources:
+                        force.goal.append(resources.pop(random.randint(0, len(resources)-1)).point)
+
+
             # WALKER
-            elif force.forceType == ForceType.WALKER:
+            if force.forceType == ForceType.WALKER:
                 for resource in resources:
                     if force.point.dist(resource) < 15:
                         force.goal = [resource]
@@ -187,7 +204,7 @@ class Brain():
                     self.aStage.castlePoint(force)
                     d = force.goToPoint(force.goal[0])
 
-            else:
+            if not d:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
 
@@ -202,6 +219,8 @@ class Brain():
                 return
 
         def selectPioneer(self, workers):
+            if self.isAttack:
+                return
             pioneers = self.forceUnit(workers, ForceType.PIONEER)
             i = len(pioneers)
             table = pTable(self, workers)
@@ -217,7 +236,7 @@ class Brain():
                 self.pioneerMap.remove(point)
                 worker.forceType = ForceType.PIONEER
                 worker.goal.append(point)
-                i+=1
+                i += 1
 
         def actPioneer(self, worker):
             """
@@ -235,8 +254,14 @@ class Brain():
                     cResource.planners.append(worker)
                     worker.goal.insert(0, cResource.point)
 
-            if cResource and cResource.point == worker.point and distToUnits(worker.point,
-                                                                             self.productions) >= PRODUCTION_INTERVAL:
+            if self.bet:
+                worker.goal.append(self.bet.pop())
+                d = worker.goToPoint(worker.goal[0])
+                if d:
+                    self.actions[worker.cid] = d
+
+            elif cResource and cResource.point == worker.point and distToUnits(worker.point,
+                                                                               self.productions) >= PRODUCTION_INTERVAL:
                 # 資源なかったらお留守番
                 if self.aStage.resourceNum >= Range[UnitType.VILLAGE.value]:
                     self.actions[worker.cid] = UnitType.VILLAGE.value
@@ -289,7 +314,8 @@ class Brain():
                         self.actions[worker.cid] = d
                         resource.planners.append(worker)
                     else:  # on resource
-                        if distToUnits(worker.point, self.productions) >= PRODUCTION_INTERVAL:
+                        if len(self.unit(ForceType.WORKER)) < INCOME and distToUnits(worker.point,
+                                                                                     self.productions) >= PRODUCTION_INTERVAL:
                             self.actions[worker.cid] = UnitType.VILLAGE.value
                             self.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
                         resource.workers.append(worker)
@@ -307,8 +333,8 @@ class Brain():
             turnStart(self, worker)
 
         # 基地を建てる
-        # if Cost[UnitType.BASE] + 200 <= self.aStage.resourceNum and len(self.unit(UnitType.BASE)) < 1:
-        # buildBase(self, workers)
+        if self.isAttack and Cost[UnitType.BASE] <= self.aStage.resourceNum and len(self.unit(UnitType.BASE)) < 1:
+            buildBase(self, workers)
 
         # どれをPioneerか決める
         selectPioneer(self, workers)

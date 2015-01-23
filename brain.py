@@ -15,17 +15,12 @@ class Brain():
         self.exp = []
         self.pioneerMap = []
 
-        width = Range[UnitType.WORKER.value] * 2 + 1
-        zero = Point(Range[UnitType.WORKER.value], Range[UnitType.WORKER.value])
-        # for i in xrange(MAPSIZE / width):
-        # self.pioneerGoal.append([Point(width * i + 2, max(Range[UnitType.WORKER.value], zero.y - i * 5)), Point(width * i + 2, 99 - Range[UnitType.WORKER.value] - 5 * i)])
-        # Point(width * i + 2, max(0, zero.y - i * 5))
-        # Random
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
-                self.pioneerMap.append(Point(j, i))
-
-        random.shuffle(self.pioneerMap)
+                if i == 0:
+                    self.pioneerMap.insert(0, Point(i, j))
+                else:
+                    self.pioneerMap.append(Point(i, j))
 
 
     def startTurn(self):
@@ -215,7 +210,7 @@ class Brain():
             for dist, point, worker in table:
                 if worker in usedWorker or point in usedPoint:
                     continue
-                if i > 5:
+                if i > PIONEER_NUM:
                     break
                 usedWorker.append(worker)
                 usedPoint.append(point)

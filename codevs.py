@@ -33,6 +33,7 @@ MAPSIZE = 100
 
 # 町をどれくらいの間隔で作るか
 PRODUCTION_INTERVAL = 40
+PIONEER_NUM = 8
 
 # Distance
 def distToUnits(point, targets):

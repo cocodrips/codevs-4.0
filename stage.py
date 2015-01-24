@@ -94,15 +94,13 @@ class Stage(object):
             character.goal.pop(0)
 
         if not character.goal:
-            character.goal.append(Point(MAPSIZE - 1 - character.cid % 40, MAPSIZE -1  - random.randint(0, 40)))
-
+            character.goal.append(Point(MAPSIZE - 5, MAPSIZE - 5))
 
 
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
             for j in xrange(MAPSIZE / self.GRID):
                 if self.supporter.map[i * self.GRID][j * self.GRID] > 0:
-
                     self.field[i][j] = True
 
     def searchPoints(self):

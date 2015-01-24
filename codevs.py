@@ -20,7 +20,8 @@ class ForceType(enum.IntEnum):
     EXPLORER = 4
     PIONEER = 5
     WORKER = 6
-    NEET = 7
+    BASE_BUILDER = 7
+    NEET = 8
 
 
 
@@ -36,6 +37,7 @@ PRODUCTION_INTERVAL = 40
 INCOME = 40
 
 GATEKEEPERS = 5
+GROUP_INTERVAL = 10
 
 
 #PIONEER_NUM

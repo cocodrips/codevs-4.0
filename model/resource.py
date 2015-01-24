@@ -7,6 +7,7 @@ class Resource(object):
         self.workers = []
         self.planners = []
         self.point = point
+        self.mother = None
 
     def __eq__(self, other):
         return self.point == other.point

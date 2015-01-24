@@ -13,7 +13,7 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(MAPSIZE - 1, MAPSIZE - 1)]
+        self.bet = [Point(MAPSIZE - 40, MAPSIZE - 40)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
@@ -35,7 +35,7 @@ class Brain():
         それぞれのユニットの命令を呼び出す
         """
         self.isAttack = len(self.unit(UnitType.WORKER)) > INCOME
-        print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
+        # print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
         # 順番考える
         self.work()
         self.product()
@@ -61,13 +61,16 @@ class Brain():
     def castle(self):
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
 
+    @property
+    def isEnemy(self):
+        return len(self.aStage.enemies.forces()) > 0
     ################################################
 
 
     def product(self):
         def generate(self, production):
             # 何度も呼ぶので無駄
-            margin = len(self.unit(UnitType.BASE)) * Cost[UnitType.ASSASSIN.value] + Cost[UnitType.WORKER.value]
+            margin = len(self.unit(UnitType.BASE)) * Cost[UnitType.KNIGHT.value] + Cost[UnitType.WORKER.value]
 
             if self.aStage.resourceNum >= margin:
                 self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
@@ -85,6 +88,9 @@ class Brain():
 
         for p in canGenerateProductions:
             generate(self, p)
+
+
+
 
             # if self.pioneerGoal:
             # for p in (set(productions) - canGenerateProductions):
@@ -142,10 +148,29 @@ class Brain():
         def unsafetyResource(self):
             r = []
             for resource in self.resources:
-                s = self.aStage.enemies.aroundStrength(resource.point, 10)
-                if 100 < s:
+                if resource.mother and not self.aStage.supporter.units.get(resource.mother.cid):
+                    resource.mother = None
+                if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 10) > 100:
                     r.append(resource)
+
             return r
+
+        def houseSitting(self, force):
+            if not force.goal and resources:
+                # closest = closestUnit(resources)
+                r = resources.pop()
+                r.mother = force
+                force.goal.append(r.point)
+
+            if force.goal:
+                return force.goToPoint(force.goal[0])
+
+        def gatekeeper(self, force):
+            point = self.castle.point
+            # p, strength = self.aStage.enemies.rangeStrength(force.point, Point())
+            # if strength > 1:
+            #     point = p
+            return force.goToPoint(point)
 
         resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
@@ -156,55 +181,28 @@ class Brain():
         basePoint = self.aStage.supporter.unit[UnitType.BASE][0].point
 
         for force in forces:
-            check(self, force)
-            # 生成された兵士はここで命を受ける
             if force.forceType == ForceType.NEET:
-                # 城から生成される兵士
-                if force.point == basePoint and self.aStage.turnNum % 10 != 0:
-                    continue
+                if force.type == UnitType.ASSASSIN and resources:
+                    force.forceType = ForceType.HOUSE_SITTING
+                elif force.type == UnitType.KNIGHT and len(self.forceUnit(self.unit(UnitType.KNIGHT),
+                                                                          ForceType.GATEKEEPER)) < GATEKEEPERS:
+                    force.forceType = ForceType.GATEKEEPER
                 else:
-                    if force.type == UnitType.ASSASSIN and random.randint(0, 2) == 0:
-                        force.forceType = ForceType.HOUSE_SITTING
-                    else:
-                        force.forceType = ForceType.ATTACKER
+                    force.forceType = ForceType.ATTACKER
 
 
             # 命令の種類
             d = None
             # 役割の決まった兵士たちの行動
+
             # GATEKEEPER
             if force.forceType == ForceType.GATEKEEPER:
-                point = castlePoint.plus(Point(5 * (force.cid % 5), 5 * (force.cid / 5 % 5) - 10))
-                p, strength = self.aStage.enemies.rangeStrength(force.point, 4)
-                if strength > 1:
-                    point = p
-                d = force.goToPoint(point)
+                d = gatekeeper(self, force)
 
             if force.forceType == ForceType.HOUSE_SITTING:
-                if not force.goal and resources:
-                    # closest = closestUnit(resources)
-                    force.goal.append(resources.pop(random.randint(0, len(resources)-1)).point)
-                if force.goal:
-                    d = force.goToPoint(force.goal[0])
-                else:
-                    force.forceType == ForceType.ATTACKER
-                    if not force.goal and resources:
-                        force.goal.append(resources.pop(random.randint(0, len(resources)-1)).point)
+                d = houseSitting(self, force)
 
-
-            # WALKER
-            if force.forceType == ForceType.WALKER:
-                for resource in resources:
-                    if force.point.dist(resource) < 15:
-                        force.goal = [resource]
-                        d = force.goToPoint(force.goal[0])
-                        resources.remove(resource)
-                        break
-                if not d:
-                    self.aStage.castlePoint(force)
-                    d = force.goToPoint(force.goal[0])
-
-            if not d:
+            if force.forceType == ForceType.ATTACKER:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
 
@@ -219,17 +217,20 @@ class Brain():
                 return
 
         def selectPioneer(self, workers):
-            if self.isAttack:
-                return
             pioneers = self.forceUnit(workers, ForceType.PIONEER)
             i = len(pioneers)
             table = pTable(self, workers)
             usedWorker, usedPoint = [], []
+            pioneerNum = PIONEER_NUM
+            if self.isAttack:
+                pioneerNum = 1
+            elif len(workers) > 10:
+                pioneerNum = 2
 
             for dist, point, worker in table:
                 if worker in usedWorker or point in usedPoint:
                     continue
-                if i > PIONEER_NUM:
+                if i > pioneerNum:
                     break
                 usedWorker.append(worker)
                 usedPoint.append(point)
@@ -256,6 +257,7 @@ class Brain():
 
             if self.bet:
                 worker.goal.append(self.bet.pop())
+                worker.rightRate = 0.5
                 d = worker.goToPoint(worker.goal[0])
                 if d:
                     self.actions[worker.cid] = d
@@ -323,9 +325,19 @@ class Brain():
         def buildBase(self, workers):
             zero = Point(MAPSIZE, MAPSIZE)
             worker = min(workers, key=lambda x: x.point.dist(zero))
+            # for worker in workers:
+            #     if worker.point == self.castle.point:
             self.actions[worker.cid] = UnitType.BASE.value
             self.aStage.resourceNum -= Cost[UnitType.BASE]
             workers.remove(worker)
+
+        def isBuild(self):
+            # if not (self.isAttack or self.isEnemy):
+            #     return False
+            if self.aStage.resourceNum < Cost[UnitType.BASE]:
+                return False
+            # if len(self.unit(UnitType.BASE)) < 1:
+            return True
 
         # worker 初期化
         workers = self.unit(UnitType.WORKER)[:]
@@ -333,7 +345,7 @@ class Brain():
             turnStart(self, worker)
 
         # 基地を建てる
-        if self.isAttack and Cost[UnitType.BASE] <= self.aStage.resourceNum and len(self.unit(UnitType.BASE)) < 1:
+        if isBuild(self):
             buildBase(self, workers)
 
         # どれをPioneerか決める

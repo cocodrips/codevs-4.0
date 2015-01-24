@@ -27,8 +27,8 @@ class Stage(object):
         # Initialize units.
         self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
-        self.updateUnits()
         self.updateVisitPoint()
+        self.updateUnits()
 
         self._searchPoints = []
 
@@ -84,7 +84,7 @@ class Stage(object):
     def castlePoint(self, character):
         castle = self.enemies.unit[UnitType.CASTLE.value]
         if castle:
-            character.goal = [castle[0].point.plus(Point(-character.cid % 3, - (2 - character.cid % 3)))]
+            character.goal = [castle[0].point]
             character.isFix = True
             return
 
@@ -94,7 +94,7 @@ class Stage(object):
             character.goal.pop(0)
 
         if not character.goal:
-            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 40)))
+            character.goal.append(Point(MAPSIZE - 1 - character.cid % 40, MAPSIZE -1  - random.randint(0, 40)))
 
 
 
@@ -102,6 +102,7 @@ class Stage(object):
         for i in xrange(MAPSIZE / self.GRID):
             for j in xrange(MAPSIZE / self.GRID):
                 if self.supporter.map[i * self.GRID][j * self.GRID] > 0:
+
                     self.field[i][j] = True
 
     def searchPoints(self):

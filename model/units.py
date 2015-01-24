@@ -18,6 +18,12 @@ class Units:
         self._aroundStrength = {}
         self._strongest = {}
 
+    def forces(self):
+        g = []
+        for i in xrange(3):
+            g += self.unit[UnitType.KNIGHT.value + i]
+        return g
+
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]
         for unit in self.units.values():

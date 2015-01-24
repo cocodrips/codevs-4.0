@@ -14,10 +14,11 @@ class Character(object):
         self.isFix = False
         self.group = []
         self.forceType = forceType
+        self.rightRate = 0.2 * (self.cid % 10)
 
 
     def goToPoint(self, point):
-        if random.random() < 0.2 * (self.cid % 10):
+        if random.random() > self.rightRate:
             if point.y - self.point.y > 0:
                 return 'D'
             if point.y - self.point.y < 0:

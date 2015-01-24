@@ -9,28 +9,20 @@ class Units:
         self.strengthMap = {}
         self.units = {}
         self.castle = None
-        self.unit = [[] for unitType in UnitType]
+        self.unit = [[] for _ in UnitType]
+        self.forceUnits = [[] for _ in ForceType]
 
     def turnInitialize(self, turnNum=10):
-        self.unit = [[] for unitType in UnitType]
+        self.unit = [[] for _ in UnitType]
         self.update()
         self._aroundStrength = {}
         self._strongest = {}
-        if turnNum == 0:
-            i = 0
-            zero = self.unit[UnitType.CASTLE][0].point
-            for worker in self.unit[UnitType.WORKER]:
-                width = i * 18
-                worker.goal = [Point(width + 2, zero.y),
-                               Point(width + 2, 99 - 15 * i),
-                               Point(width + 11, 99 - 15 * i),
-                               Point(width + 11, 0)]
-                i += 1
-            worker.goal.append(Point(i * 18 + 2, 0))
-            worker.goal.append(Point(i * 18 + 2, 99 - 15 * i))
-            worker.goal.append(Point(i * 18 + 11, 99 - 15 * i))
-            worker.goal.append(Point(i * 18 + 11, 0))
 
+    def forces(self):
+        g = []
+        for i in xrange(3):
+            g += self.unit[UnitType.KNIGHT.value + i]
+        return g
 
     def update(self):
         map = [[0 for _ in xrange(100)] for _ in xrange(100)]

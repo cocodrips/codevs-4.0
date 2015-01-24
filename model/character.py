@@ -4,7 +4,7 @@ import random
 
 
 class Character(object):
-    def __init__(self, cid, y, x, hp, type, turn=0):
+    def __init__(self, cid, y, x, hp, type, forceType=ForceType.NEET, turn=0):
         self.cid = cid
         self.point = Point(x, y)
         self.hp = hp
@@ -13,11 +13,12 @@ class Character(object):
         self.turn = turn
         self.isFix = False
         self.group = []
-        self.forceType = None
+        self.forceType = forceType
+        self.rightRate = 0.2 * (self.cid % 10)
 
 
     def goToPoint(self, point):
-        if random.random() < 0.1 * (self.cid % 10) :
+        if random.random() > self.rightRate:
             if point.y - self.point.y > 0:
                 return 'D'
             if point.y - self.point.y < 0:
@@ -30,11 +31,11 @@ class Character(object):
             return 'D'
         if point.y - self.point.y < 0:
             return 'U'
-
         return False
 
-    def distanceToCharacter(self, character):
-        pass
 
     def closest(self, field):
         pass
+
+    def isAround(self, obj, range):
+        return self.point.dist(obj) <= range

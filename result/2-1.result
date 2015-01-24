@@ -1,0 +1,39 @@
+実行を開始します
+stage 23 (vs colunAI) : result=win  score=32 turn=275x1 thinkTime=183917ms
+stage 0 (vs colunAI) : result=win  score=2 turn=243x1 thinkTime=6113ms
+stage 12 (vs colunAI) : result=win  score=18 turn=208x1 thinkTime=96023ms
+
+stage 1 (vs zinnober) : result=win  score=4 turn=284x1 thinkTime=13676ms
+stage 15 (vs zinnober) : result=win  score=20 turn=272x1 thinkTime=127887ms
+stage 19 (vs zinnober) : result=win  score=26 turn=267x1 thinkTime=152109ms
+
+stage 2 (vs schwarz) : result=win  score=6 turn=346x1 thinkTime=20885ms
+stage 8 (vs schwarz) : result=win  score=12 turn=258x1 thinkTime=69202ms
+stage 20 (vs schwarz) : result=win  score=28 turn=305x1 thinkTime=158297ms
+
+stage 4 (vs rosa) : result=win  score=10 turn=246x1 thinkTime=32488ms
+stage 11 (vs rosa) : result=win  score=16 turn=274x1 thinkTime=90555ms
+stage 22 (vs rosa) : result=win  score=30 turn=220x1 thinkTime=176262ms
+
+stage 7 (vs chokudAI) : result=lose  score=10 turn=252x(-1) thinkTime=63898ms
+stage 10 (vs chokudAI) : result=win  score=14 turn=222x1 thinkTime=83247ms
+stage 17 (vs chokudAI) : result=win  score=24 turn=239x1 thinkTime=137171ms
+
+
+stage 3 (vs gelb) : result=win  score=8 turn=273x1 thinkTime=26616ms
+stage 13 (vs gelb) : result=lose  score=18 turn=670x(-1) thinkTime=114713ms
+stage 16 (vs gelb) : result=win  score=22 turn=201x1 thinkTime=132124ms
+
+stage 5 (vs grun) : result=lose  score=10 turn=397x(-1) thinkTime=43415ms
+stage 14 (vs grun) : result=lose  score=18 turn=360x(-1) thinkTime=122009ms
+stage 21 (vs grun) : result=lose  score=28 turn=499x(-1) thinkTime=170509ms
+
+stage 6 (vs lila) : result=lose  score=10 turn=526x(-1) thinkTime=57976ms
+stage 9 (vs lila) : result=lose  score=12 turn=388x(-1) thinkTime=78155ms
+stage 18 (vs lila) : result=lose  score=24 turn=368x(-1) thinkTime=146193ms
+
+
+----
+ score:32 (win:16 lose:8 draw:8)
+リプレイファイルを保存しています...
+リプレイファイルを保存しました:/Users/cocodrips/log/replay/20141228_180837_replay.txt

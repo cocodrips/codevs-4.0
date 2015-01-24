@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from codevs import *
 from model import Character, Point
 import sys
@@ -13,18 +14,22 @@ def turnInput(aBrain, t, s):
 
     turnNum = aBrain.aStage.turnNum
     units = aBrain.aStage.supporter.units
+    unitsId = []
     for i in xrange(N):
         cid, y, x, hp, utype = map(int, raw_input().split())
+        unitsId.append(cid)
         if cid in units:
             c = units[cid]
             c.point = Point(x, y)
             c.turn = turnNum
         else:
-            units[cid] = Character(cid, y, x, hp, UnitType(utype), turnNum)
+            units[cid] = Character(cid, y, x, hp, UnitType(utype), ForceType.NEET, turnNum)
 
-    for k, v in units.items():
-        if v.turn != turnNum:
-            units.pop(k)
+    # 永眠キャラを除去
+    for key, unit in units.items():
+        if key not in unitsId:
+            units.pop(key)
+
 
     enemies = aBrain.aStage.enemies.units
     M = int(raw_input())
@@ -36,13 +41,10 @@ def turnInput(aBrain, t, s):
             c.turn = turnNum
         enemies[cid] = Character(cid, y, x, hp, UnitType(utype), turnNum)
 
-    resources = aBrain.aStage.resources
     R = int(raw_input())
     for i in xrange(R):
         y, x = map(int, raw_input().split())
-        p = Point(x, y)
-        if p not in resources:
-            resources[p] = []
+        aBrain.aStage.updateResource(Point(x, y))
     aBrain.startTurn()
     raw_input()  # end
 

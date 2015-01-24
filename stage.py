@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from codevs import *
-from model import Point, Units
+from model import Point, Units, Resource
 import random
 
 
@@ -19,15 +19,16 @@ class Stage(object):
         self.resources = {}
         self.nearestResouces = {}
 
-        self.GRID = 4
+        self.GRID = 10
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
+
 
     def startTurn(self):
         # Initialize units.
         self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
-        self.updateUnits()
         self.updateVisitPoint()
+        self.updateUnits()
 
         self._searchPoints = []
 
@@ -42,13 +43,13 @@ class Stage(object):
                 minD = d
 
         if closest and character.goal:
-            if character.point.dist(character.goal[0]) < closest.dist(character.point):
+            if character.point.dist(character.goal[0]) < self.supporter.unit[UnitType.CASTLE][0].point.dist(closest):
                 closest = None
 
         if not closest:
             if not character.goal:
                 point = self.randomAction(character)
-                if not point: # 全部回ってると起動するか考える
+                if not point:  # 全部回ってると起動するか考える
                     return character.goal.append(character.point)
 
                 character.goal.append(Point(point.x, character.point.y))
@@ -93,16 +94,15 @@ class Stage(object):
             character.goal.pop(0)
 
         if not character.goal:
-            character.goal.append(Point(99 - character.cid % 40, 99 - random.randint(0, 40)))
+            character.goal.append(Point(MAPSIZE - 1 - character.cid % 40, MAPSIZE -1  - random.randint(0, 40)))
 
-    def updateUnits(self):
-        for k, v in self.resources.items():
-            self.resources[k] = [chara for chara in v if chara.turn == self.turnNum]
+
 
     def updateVisitPoint(self):
         for i in xrange(MAPSIZE / self.GRID):
             for j in xrange(MAPSIZE / self.GRID):
                 if self.supporter.map[i * self.GRID][j * self.GRID] > 0:
+
                     self.field[i][j] = True
 
     def searchPoints(self):
@@ -116,3 +116,18 @@ class Stage(object):
         self._searchPoints = searchPoints
         return searchPoints
 
+    def emptyResources(self):
+        return [r for r in self.resources.values() if len(r.volunteer) < self.workerThrehold]
+
+    # Update & Reset
+    def updateUnits(self):
+        for v in self.resources.values():
+            v.reset()
+
+    # controller.py
+    def updateResource(self, point):
+        """
+        Call from controller.py.
+        """
+        if point not in self.resources:
+            self.resources[point] = Resource(point)

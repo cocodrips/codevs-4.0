@@ -84,7 +84,7 @@ class Stage(object):
     def castlePoint(self, character):
         castle = self.enemies.unit[UnitType.CASTLE.value]
         if castle:
-            character.goal = [castle[0].point]
+            character.goal = [castle[0].point.plus(Point(-1, -1))]
             character.isFix = True
             return
 

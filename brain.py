@@ -146,7 +146,7 @@ class Brain():
                     if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
                         t = UnitType.ASSASSIN.value
                     else:
-                        t = UnitType.KNIGHT.value + random.randint(0, 1)
+                        t = UnitType.KNIGHT.value# + random.randint(0, 1)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
                 continue

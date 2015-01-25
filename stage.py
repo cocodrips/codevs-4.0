@@ -20,6 +20,7 @@ class Stage(object):
         self.resources = {}
         self.nearestResouces = {}
         self.five = False
+        self.isStartEnemyAttack = False
 
         self.GRID = 10
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
@@ -34,8 +35,7 @@ class Stage(object):
         self.updateUnits()
         if self.turnNum == 6:
             self.five = sorted(self.supporter.units.keys())[-1] != 12
-            print >> sys.stderr, self.five
-
+        self.isStartEnemyAttack |= len(self.enemies.forces()) > 0
 
         self._searchPoints = []
 

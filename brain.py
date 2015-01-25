@@ -211,7 +211,11 @@ class Brain():
                     if not self.enemyCastle and not self.defenceMode and len(forces) < FORCE_EXPLORER_NUM:
                         force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
-                        force.forceType = ForceType.ATTACKER
+
+                        if self.aStage.supporter.aroundStrength(self.castle.point, 40) < self.aStage.enemies.aroundStrength(self.castle.point, 40):
+                            force.forceType = ForceType.GATEKEEPER
+                        else:
+                            force.forceType = ForceType.ATTACKER
                         force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
 
 
@@ -252,7 +256,7 @@ class Brain():
             if self.isAttack:
                 pioneerNum = 1
             elif len(workers) > 30:
-                pioneerNum = 2
+                pioneerNum = 3
 
             for dist, point, worker in table:
                 if worker in usedWorker or point in usedPoint:
@@ -365,7 +369,7 @@ class Brain():
         def buildBase(self, workers):
             halfStrength = self.aStage.enemies.rangeStrength(self.castle.point, Point(SILBER_POINT, SILBER_POINT))
             print >> sys.stderr, "strength:", halfStrength, self.aStage.five
-            if halfStrength > 200 and len(self.unit(UnitType.BASE)) < 1 and self.aStage.five:
+            if self.aStage.isStartEnemyAttack and len(self.unit(UnitType.BASE)) < 1 and self.aStage.five:
                 worker = min(workers, key=lambda x: x.point.dist(self.castle.point))
             else:
                 zero = Point(60, 60)
@@ -379,7 +383,7 @@ class Brain():
             # lila
             if not self.isAttack:
                 return False
-            if self.aStage.resourceNum < Cost[UnitType.BASE] + 100:
+            if self.aStage.resourceNum < Cost[UnitType.BASE] + 200 * int(self.aStage.five):
                 return False
             if len(self.unit(UnitType.BASE)) > 1 and self.aStage.resourceNum < Cost[UnitType.BASE] * 2:
                 return False

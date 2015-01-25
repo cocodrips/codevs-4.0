@@ -13,7 +13,7 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(MAPSIZE - 40, MAPSIZE - 40)]
+        self.bet = [Point(MAPSIZE - 40, MAPSIZE - 40), Point(MAPSIZE - 20, MAPSIZE - 20)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
@@ -46,8 +46,14 @@ class Brain():
     def unit(self, unitType):
         return self.aStage.supporter.unit[unitType]
 
+    def enemyUnit(self, unitType):
+        return self.aStage.enemies.unit[unitType]
+
     def forceUnit(self, units, forceType):
         return [unit for unit in units if unit.forceType == forceType]
+
+    def damage(self, p):
+        return self.aStage.enemies.damage(p)
 
     @property
     def productions(self):
@@ -90,43 +96,6 @@ class Brain():
         for p in canGenerateProductions:
             generate(self, p)
 
-
-
-
-            # if self.pioneerGoal:
-            # for p in (set(productions) - canGenerateProductions):
-            # generate(self, p)
-
-
-
-            # productions.sort(key=lambda x: (len(self.aStage.resources.get(x.point)),
-            # self.aStage.enemies.aroundStrength(x.point, 5)))  # ワーカーが少ない村に優先的に
-
-            # productions += self.aStage.supporter.unit[UnitType.CASTLE]
-            # resources = self.aStage.resources
-            # for resource, worker in resources.items():
-            # if not productions:
-            # return
-            #
-            # if len(worker) >= self.aStage.workerThrehold:
-            # continue
-            #
-            #     if self.aStage.enemies.aroundStrength(resource, 5) > 1000:  # 危険度は調節
-            #         continue
-            #
-            #     for production in productions:
-            #         if production.point.dist(resource) < 80 and self.aStage.enemies.aroundStrength(resource, 5) < 10000:
-            #             self.actions[production.cid] = UnitType.WORKER.value
-            #             self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
-            #             productions.remove(production)
-            #
-            # c = self.aStage.supporter.unit[UnitType.CASTLE][0]
-            # # for production in productions:
-            # if self.aStage.enemies.aroundStrength(c.point, 5) > 10 \
-            #     or (len(self.aStage.supporter.unit[UnitType.WORKER])) < 40 and len(self.aStage.supporter.unit[UnitType.BASE]) < 1:
-            #     if self.aStage.resourceNum > 40:
-            #         self.actions[c.cid] = UnitType.WORKER.value
-            #         self.aStage.resourceNum -= 40
 
 
     def base(self):
@@ -257,7 +226,8 @@ class Brain():
                     worker.goal.insert(0, cResource.point)
 
             if self.bet:
-                worker.goal.append(self.bet.pop())
+                worker.goal = self.bet
+                self.bet = []
                 worker.rightRate = 0.5
                 d = worker.goToPoint(worker.goal[0])
                 if d:

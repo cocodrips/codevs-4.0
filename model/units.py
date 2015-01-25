@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from codevs import *
 from model import Point
+import collections
 
 
 class Units:
@@ -17,6 +18,7 @@ class Units:
         self.update()
         self._aroundStrength = {}
         self._strongest = {}
+        self._damageTable = self.damageTable()
 
     def forces(self):
         g = []
@@ -37,8 +39,8 @@ class Units:
                     x = unit.point.x + i
                     y = unit.point.y + j
 
-                    if 0 <= x < 100 and 0 <= y < 100:
-                        map[x][y] += Strength[v] / (abs(i) + abs(j) + 1)
+                    if 0 <= x < MAPSIZE and 0 <= y < MAPSIZE:
+                        map[x][y] += Strength[v] / (abs(i) + abs(j) + r)
         self.map = map
         self.strengthMap = self.cumulativeSumTable(map)
 
@@ -75,6 +77,20 @@ class Units:
         if p1.x > 0 and p1.y > 0:
             s += self.strengthMap[p1.x - 1][p1.y - 1]
         return s
+
+    def damage(self, p):
+        return self._damageTable[p]
+
+    def damageTable(self):
+        table = collections.defaultdict(int)
+        for unit in self.units.values():
+            r = AttackRange[unit.type.value]
+            # 気合入れれば半分にできる
+            for x in xrange(-r, r + 1):
+                for y in xrange(-r, r + 1):
+                    if 0 <= unit.point.x + x < MAPSIZE and 0 <= unit.point.y + y < MAPSIZE and abs(x) + abs(y) <= r:
+                        table[unit.point.plus(Point(x, y))] += Strength[unit.type.value]
+        return table
 
     def cumulativeSumTable(self, map):
         strengthMap = [[0 for _ in xrange(MAPSIZE)] for _ in xrange(MAPSIZE)]

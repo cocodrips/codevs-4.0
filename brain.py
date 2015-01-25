@@ -13,14 +13,14 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(i, i) for i in xrange(4, MAPSIZE, 9)]
+        self.bet = [Point(i, i) for i in xrange(31, MAPSIZE, 9)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
                 if i == 0:
                     self.pioneerMap.insert(0, Point(i, j))
-                elif i == j and i <= 76:
+                elif i == j and 22 < i <= 76:
                     continue
                 else:
                     self.pioneerMap.append(Point(i, j))
@@ -140,10 +140,13 @@ class Brain():
             if not self.enemyCastle:
                 if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
                     return
-                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value] and self.aStage.five:
                     t = UnitType.FIGHTER.value
                 else:
-                    t = UnitType.KNIGHT.value
+                    if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                        t = UnitType.ASSASSIN.value
+                    else:
+                        t = UnitType.KNIGHT.value + random.randint(0, 1)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
                 continue
@@ -168,7 +171,7 @@ class Brain():
             for resource in self.resources:
                 if resource.mother and not self.aStage.supporter.units.get(resource.mother.cid):
                     resource.mother = None
-                if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 5) > 500:
+                if not resource.mother: #and self.aStage.enemies.aroundStrength(resource.point, 5) > 500:
                     r.append(resource)
 
             return r
@@ -212,7 +215,7 @@ class Brain():
                         force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
 
-                        if self.aStage.supporter.aroundStrength(self.castle.point, 40) < self.aStage.enemies.aroundStrength(self.castle.point, 40):
+                        if self.aStage.supporter.aroundStrength(self.castle.point, DEFENCE_RANGE) < self.aStage.enemies.aroundStrength(self.castle.point, DEFENCE_RANGE):
                             force.forceType = ForceType.GATEKEEPER
                         else:
                             force.forceType = ForceType.ATTACKER

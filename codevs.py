@@ -22,6 +22,7 @@ class ForceType(enum.IntEnum):
     WORKER = 6
     BASE_BUILDER = 7
     NEET = 8
+    CASTLE_EXPLORER = 9
 
 
 

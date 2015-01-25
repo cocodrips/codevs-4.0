@@ -68,6 +68,13 @@ class Brain():
         return self.aStage.supporter.unit[UnitType.CASTLE][0]
 
     @property
+    def enemyCastle(self):
+        c = self.aStage.enemies.unit[UnitType.CASTLE]
+        if c:
+            return c[0]
+        return None
+
+    @property
     def isEnemy(self):
         return len(self.aStage.enemies.forces()) > 0
 
@@ -100,6 +107,13 @@ class Brain():
 
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
+            if not self.enemyCastle:
+                if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
+                    return
+                self.actions[base.cid] = UnitType.KNIGHT.value
+                self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
+                continue
+
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
 
@@ -156,6 +170,8 @@ class Brain():
                                                                           ForceType.GATEKEEPER)) < GATEKEEPERS:
                     force.forceType = ForceType.GATEKEEPER
                 else:
+                    if not self.enemyCastle:
+                        force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
                         force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
                         force.forceType = ForceType.ATTACKER
@@ -172,7 +188,7 @@ class Brain():
             if force.forceType == ForceType.HOUSE_SITTING:
                 d = houseSitting(self, force)
 
-            if force.forceType == ForceType.ATTACKER:
+            if force.forceType == ForceType.ATTACKER or force.forceType == ForceType.CASTLE_EXPLORER:
                 self.aStage.castlePoint(force)
                 d = force.goToPoint(force.goal[0])
 

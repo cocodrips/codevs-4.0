@@ -101,7 +101,7 @@ class Stage(object):
             character.goal.pop(0)
 
         if not character.goal:
-            character.goal.append(Point(MAPSIZE - 5 - self.turnNum % 20, MAPSIZE - 5 - self.turnNum % 20))
+            character.goal.append(Point(MAPSIZE - 5 - (self.turnNum % 7) * 3, MAPSIZE - 5))
 
 
     def updateVisitPoint(self):

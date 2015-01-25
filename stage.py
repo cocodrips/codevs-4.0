@@ -3,6 +3,7 @@
 from codevs import *
 from model import Point, Units, Resource
 import random
+import sys
 
 
 class Stage(object):
@@ -18,6 +19,7 @@ class Stage(object):
 
         self.resources = {}
         self.nearestResouces = {}
+        self.five = False
 
         self.GRID = 10
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
@@ -25,10 +27,15 @@ class Stage(object):
 
     def startTurn(self):
         # Initialize units.
+
         self.supporter.turnInitialize(self.turnNum)
         self.enemies.turnInitialize()
         self.updateVisitPoint()
         self.updateUnits()
+        if self.turnNum == 6:
+            self.five = sorted(self.supporter.units.keys())[-1] != 12
+            print >> sys.stderr, self.five
+
 
         self._searchPoints = []
 

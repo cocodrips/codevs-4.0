@@ -97,6 +97,8 @@ class Brain():
             return False
 
         def canWait(self):
+            if self.aStage.turnNum == 5:
+                return True
             if self.aStage.turnNum < KEEP_WORKER:
                 return False
             if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 1:
@@ -166,7 +168,7 @@ class Brain():
             for resource in self.resources:
                 if resource.mother and not self.aStage.supporter.units.get(resource.mother.cid):
                     resource.mother = None
-                if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 10) > 100:
+                if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 5) > 500:
                     r.append(resource)
 
             return r
@@ -206,13 +208,9 @@ class Brain():
                                                                           ForceType.GATEKEEPER)) < GATEKEEPERS:
                     force.forceType = ForceType.GATEKEEPER
                 else:
-                    if not self.enemyCastle and not self.defenceMode:
+                    if not self.enemyCastle and not self.defenceMode and len(forces) < FORCE_EXPLORER_NUM:
                         force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
-                        # if force.point.dist(self.castle.point) and  self.aStage.turnNum % (GROUP_INTERVAL * 3) == 0:
-                        #     print >> sys.stderr,"散歩"
-                        #     force.forceType = ForceType.WALKER
-                        # else:
                         force.forceType = ForceType.ATTACKER
                         force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
 
@@ -365,9 +363,9 @@ class Brain():
                 self.actions[worker.cid] = d
 
         def buildBase(self, workers):
-            halfStrength = self.aStage.enemies.rangeStrength(Point(0, 0), Point(SILBER_POINT, SILBER_POINT))
-            print >> sys.stderr, "strength:", halfStrength
-            if halfStrength > 200 and len(self.unit(UnitType.BASE)) < 1:
+            halfStrength = self.aStage.enemies.rangeStrength(self.castle.point, Point(SILBER_POINT, SILBER_POINT))
+            print >> sys.stderr, "strength:", halfStrength, self.aStage.five
+            if halfStrength > 200 and len(self.unit(UnitType.BASE)) < 1 and self.aStage.five:
                 worker = min(workers, key=lambda x: x.point.dist(self.castle.point))
             else:
                 zero = Point(60, 60)

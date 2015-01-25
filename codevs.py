@@ -50,6 +50,7 @@ SILBER_POINT = 65
 
 # 防御
 DEFENCE_THRESHOLD = 1500
+FORCE_EXPLORER_NUM = 20
 
 # Distance
 def distToUnits(point, targets):

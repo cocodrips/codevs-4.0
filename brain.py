@@ -109,7 +109,7 @@ class Brain():
 
         productions = self.productions[:]
 
-        if canWait(self):
+        if canWait(self) or self.aStage.enemies.aroundStrength(self.castle.point, 8):
             if generate(self, self.castle):
                 print >> sys.stderr, "城待機"
                 productions.remove(self.castle)

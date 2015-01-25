@@ -101,15 +101,17 @@ class Brain():
                 return True
             if self.aStage.turnNum < KEEP_WORKER:
                 return False
-            if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 1:
+            if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 0:
                 return False
-            if self.unit(UnitType.BASE) > 1:
+            if len(self.unit(UnitType.BASE)) > 1:
                 return False
             return True
 
         productions = self.productions[:]
-
-        if canWait(self) or self.aStage.enemies.aroundStrength(self.castle.point, 8):
+        if canWait(self) or (self.aStage.enemies.aroundStrength(self.castle.point,
+                                                                5) > 5000 and distToUnits(self.castle.point,
+                                                                                          self.unit(
+                                                                                              UnitType.BASE)) != 0):
             if generate(self, self.castle):
                 print >> sys.stderr, "城待機"
                 productions.remove(self.castle)
@@ -130,7 +132,7 @@ class Brain():
                 if self.aStage.resourceNum < Cost[UnitType.FIGHTER.value]:
                     return
                 if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                    t = UnitType.FIGHTER.value +random.randint(0, 1)
+                    t = UnitType.FIGHTER.value + random.randint(0, 1)
                 else:
                     t = UnitType.FIGHTER.value
                 self.actions[base.cid] = t
@@ -391,7 +393,7 @@ class Brain():
 
         def selectGatekeeper(self, workers):
             if self.aStage.turnNum > KEEP_WORKER and len(self.forceUnit(self.unit(UnitType.WORKER),
-                                                                    ForceType.GATEKEEPER)) < 1:
+                                                                        ForceType.GATEKEEPER)) < 1:
                 for worker in workers:
                     if worker.point == self.castle.point:
                         worker.forceType = ForceType.GATEKEEPER

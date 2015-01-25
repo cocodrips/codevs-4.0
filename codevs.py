@@ -35,7 +35,7 @@ MAPSIZE = 100
 
 # 町をどれくらいの間隔で作るか
 PRODUCTION_INTERVAL = 40
-INCOME = 40
+INCOME = 20
 
 GATEKEEPERS = 5
 GROUP_INTERVAL = 10
@@ -43,7 +43,13 @@ GROUP_INTERVAL = 10
 
 #PIONEER_NUM
 PIONEER_NUM = 5
+KEEP_WORKER = 40
 
+# 銀対策
+SILBER_POINT = 65
+
+# 防御
+DEFENCE_THRESHOLD = 1500
 
 # Distance
 def distToUnits(point, targets):

@@ -13,13 +13,15 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(MAPSIZE - 40, MAPSIZE - 40), Point(MAPSIZE - 20, MAPSIZE - 20)]
+        self.bet = [Point(i, i) for i in xrange(4, MAPSIZE, 9)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
                 if i == 0:
                     self.pioneerMap.insert(0, Point(i, j))
+                elif i == j and i <= 76:
+                    continue
                 else:
                     self.pioneerMap.append(Point(i, j))
 
@@ -35,6 +37,8 @@ class Brain():
         それぞれのユニットの命令を呼び出す
         """
         self.isAttack = len(self.unit(UnitType.WORKER)) > INCOME
+        self.defenceMode = self.aStage.enemies.aroundStrength(self.castle.point,
+                                                              Range[UnitType.CASTLE]) > DEFENCE_THRESHOLD
         # print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
         # 順番考える
         self.work()
@@ -92,7 +96,21 @@ class Brain():
                 return True
             return False
 
+        def canWait(self):
+            if self.aStage.turnNum < KEEP_WORKER:
+                return False
+            if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 1:
+                return False
+            if self.unit(UnitType.BASE) > 1:
+                return False
+            return True
+
         productions = self.productions[:]
+
+        if canWait(self):
+            if generate(self, self.castle):
+                print >> sys.stderr, "城待機"
+                productions.remove(self.castle)
 
         emptyResources = self.aStage.emptyResources()
         canGenerateProductions = set()
@@ -104,21 +122,35 @@ class Brain():
             generate(self, p)
 
 
-
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
+            if self.defenceMode:
+                if self.aStage.resourceNum < Cost[UnitType.FIGHTER.value]:
+                    return
+                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                    t = UnitType.FIGHTER.value +random.randint(0, 1)
+                else:
+                    t = UnitType.FIGHTER.value
+                self.actions[base.cid] = t
+                self.aStage.resourceNum -= Cost[t]
+                continue
+
             if not self.enemyCastle:
                 if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
                     return
-                self.actions[base.cid] = UnitType.KNIGHT.value
-                self.aStage.resourceNum -= Cost[UnitType.KNIGHT.value]
+                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                    t = UnitType.FIGHTER.value
+                else:
+                    t = UnitType.KNIGHT.value
+                self.actions[base.cid] = t
+                self.aStage.resourceNum -= Cost[t]
                 continue
 
             if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
                 return
 
             else:
-                t = UnitType.KNIGHT.value + min(2, random.randint(0, 3))
+                t = UnitType.KNIGHT.value + random.randint(0, 2)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
 
@@ -156,6 +188,10 @@ class Brain():
             # point = p
             return force.goToPoint(point)
 
+        def walker(self, force):
+            point, strength = self.aStage.enemies.strongest(force.point, MAPSIZE)
+            return force.goToPoint(point)
+
         resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
         forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
@@ -170,11 +206,15 @@ class Brain():
                                                                           ForceType.GATEKEEPER)) < GATEKEEPERS:
                     force.forceType = ForceType.GATEKEEPER
                 else:
-                    if not self.enemyCastle:
+                    if not self.enemyCastle and not self.defenceMode:
                         force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
-                        force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
+                        # if force.point.dist(self.castle.point) and  self.aStage.turnNum % (GROUP_INTERVAL * 3) == 0:
+                        #     print >> sys.stderr,"散歩"
+                        #     force.forceType = ForceType.WALKER
+                        # else:
                         force.forceType = ForceType.ATTACKER
+                        force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
 
 
             # 命令の種類
@@ -187,6 +227,9 @@ class Brain():
 
             if force.forceType == ForceType.HOUSE_SITTING:
                 d = houseSitting(self, force)
+
+            if force.forceType == ForceType.WALKER:
+                d = walker(self, force)
 
             if force.forceType == ForceType.ATTACKER or force.forceType == ForceType.CASTLE_EXPLORER:
                 self.aStage.castlePoint(force)
@@ -322,20 +365,36 @@ class Brain():
                 self.actions[worker.cid] = d
 
         def buildBase(self, workers):
-            zero = Point(MAPSIZE, MAPSIZE)
-            worker = min(workers, key=lambda x: x.point.dist(zero))
+            halfStrength = self.aStage.enemies.rangeStrength(Point(0, 0), Point(SILBER_POINT, SILBER_POINT))
+            print >> sys.stderr, "strength:", halfStrength
+            if halfStrength > 200 and len(self.unit(UnitType.BASE)) < 1:
+                worker = min(workers, key=lambda x: x.point.dist(self.castle.point))
+            else:
+                zero = Point(60, 60)
+                worker = min(workers, key=lambda x: x.point.dist(zero))
 
             self.actions[worker.cid] = UnitType.BASE.value
             self.aStage.resourceNum -= Cost[UnitType.BASE]
             workers.remove(worker)
 
-        def isBuild(self):
-            # if not (self.isAttack or self.isEnemy):
-            # return False
-            if self.aStage.resourceNum < Cost[UnitType.BASE]:
+        def canBuild(self):
+            # lila
+            if not self.isAttack:
                 return False
-            # if len(self.unit(UnitType.BASE)) < 1:
+            if self.aStage.resourceNum < Cost[UnitType.BASE] + 100:
+                return False
+            if len(self.unit(UnitType.BASE)) > 1 and self.aStage.resourceNum < Cost[UnitType.BASE] * 2:
+                return False
             return True
+
+        def selectGatekeeper(self, workers):
+            if self.aStage.turnNum > KEEP_WORKER and len(self.forceUnit(self.unit(UnitType.WORKER),
+                                                                    ForceType.GATEKEEPER)) < 1:
+                for worker in workers:
+                    if worker.point == self.castle.point:
+                        worker.forceType = ForceType.GATEKEEPER
+                        break
+
 
         # worker 初期化
         workers = self.unit(UnitType.WORKER)[:]
@@ -347,15 +406,21 @@ class Brain():
             worker.forceType = ForceType.BASE_BUILDER
             worker.goal.append(MAPSIZE - 1, MAPSIZE - 1)
 
-        # 基地を建てる
-        if isBuild(self):
-            buildBase(self, workers)
+        # 城に待機する人
+        selectGatekeeper(self, workers)
 
         # Builder
         builder = self.forceUnit(workers, ForceType.BASE_BUILDER)
         if builder:
             actBuilder(self, builder[0])
 
+        # 基地を建てる
+        if canBuild(self):
+            buildBase(self, workers)
+
+        builder = self.forceUnit(workers, ForceType.GATEKEEPER)
+        if builder:
+            workers.remove(builder[0])
 
         # どれをPioneerか決める
         selectPioneer(self, workers)

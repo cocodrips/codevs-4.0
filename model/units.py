@@ -54,6 +54,9 @@ class Units:
         return self._aroundStrength[(point, size)]
 
     def strongest(self, point, size):  # セグツリーつかってみたい
+        """
+        pointから周辺size以内の中で一番強い所
+        """
         if not self._strongest.get((point, size)):
             maxi = -1
             strongestPoint = None

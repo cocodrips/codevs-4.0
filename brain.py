@@ -109,7 +109,7 @@ class Brain():
 
         productions = self.productions[:]
         if canWait(self) or (self.aStage.enemies.aroundStrength(self.castle.point,
-                                                                5) > 5000 and distToUnits(self.castle.point,
+                                                                5) > 50000 and distToUnits(self.castle.point,
                                                                                           self.unit(
                                                                                               UnitType.BASE)) != 0):
             if generate(self, self.castle):
@@ -207,10 +207,10 @@ class Brain():
 
         for force in forces:
             if force.forceType == ForceType.NEET:
-                if force.type == UnitType.ASSASSIN and resources:
+                if force.type == UnitType.ASSASSIN and resources and len(forces) > 10:
                     force.forceType = ForceType.HOUSE_SITTING
                 elif force.type == UnitType.KNIGHT and len(self.forceUnit(self.unit(UnitType.KNIGHT),
-                                                                          ForceType.GATEKEEPER)) < GATEKEEPERS:
+                                                                          ForceType.GATEKEEPER)) < GATEKEEPERS and len(forces) > 20:
                     force.forceType = ForceType.GATEKEEPER
                 else:
                     if not self.enemyCastle and not self.defenceMode and len(forces) < FORCE_EXPLORER_NUM:
@@ -364,7 +364,7 @@ class Brain():
 
             for worker in fWorkers:
                 if worker not in used and distToUnits(worker.point, self.resources) != 0:
-                    d = worker.goToPoint(Point(MAPSIZE - 1, MAPSIZE - 1))
+                    d = worker.goToPoint(self.aStage.enemies.strongest(worker.point, 5)[0])
                     if d:
                         self.actions[worker.cid] = d
 

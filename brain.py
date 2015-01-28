@@ -190,9 +190,9 @@ class Brain():
 
         def gatekeeper(self, force):
             point = self.castle.point
-            # p, strength = self.aStage.enemies.rangeStrength(force.point, Point())
-            # if strength > 1:
-            # point = p
+            p, strength = self.aStage.enemies.strongest(force.point, Range[force.forceType])
+            if strength > GATEKEEP_STRENGTH:
+                point = p
             return force.goToPoint(point)
 
         def walker(self, force):
@@ -205,6 +205,7 @@ class Brain():
 
 
         for force in forces:
+
             if force.forceType == ForceType.NEET:
                 if force.type == UnitType.ASSASSIN and resources and len(forces) > 10:
                     force.forceType = ForceType.HOUSE_SITTING

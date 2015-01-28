@@ -31,6 +31,7 @@ def turnInput(aBrain, t, s):
             units.pop(key)
 
 
+    aBrain.aStage.enemies.units = {}
     enemies = aBrain.aStage.enemies.units
     M = int(raw_input())
     for i in xrange(M):

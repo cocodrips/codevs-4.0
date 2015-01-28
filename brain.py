@@ -202,8 +202,7 @@ class Brain():
         resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
         forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
-        if not self.aStage.supporter.unit[UnitType.BASE]:
-            return
+
 
         for force in forces:
             if force.forceType == ForceType.NEET:

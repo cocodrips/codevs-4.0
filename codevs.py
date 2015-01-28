@@ -29,13 +29,13 @@ class ForceType(enum.IntEnum):
 Cost = [40, 20, 40, 60, 0, 100, 500]
 Range = [4, 4, 4, 4, 10, 10, 4]
 AttackRange = [2, 2, 2, 2, 10, 2, 2]
-Strength = [100, 100, 500, 1000, 100, 100, 100]
+Strength = [100, 200, 500, 1000, 100, 100, 100]
 INF = 100000000
 MAPSIZE = 100
 
 # 町をどれくらいの間隔で作るか
 PRODUCTION_INTERVAL = 40
-INCOME = 20
+INCOME = 25
 
 GATEKEEPERS = 5
 GROUP_INTERVAL = 10
@@ -50,7 +50,8 @@ SILBER_POINT = 65
 
 # 防御
 DEFENCE_THRESHOLD = 1500
-FORCE_EXPLORER_NUM = 20
+FORCE_EXPLORER_NUM = 40
+DEFENCE_RANGE = 60
 
 # Distance
 def distToUnits(point, targets):

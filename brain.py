@@ -13,14 +13,14 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(i, i) for i in xrange(4, MAPSIZE, 9)]
+        self.bet = [Point(i, i) for i in xrange(31, MAPSIZE, 9)]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
                 if i == 0:
                     self.pioneerMap.insert(0, Point(i, j))
-                elif i == j and i <= 76:
+                elif i == j and 22 < i <= 76:
                     continue
                 else:
                     self.pioneerMap.append(Point(i, j))
@@ -101,15 +101,17 @@ class Brain():
                 return True
             if self.aStage.turnNum < KEEP_WORKER:
                 return False
-            if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 1:
+            if len(self.forceUnit(self.unit(UnitType.WORKER), ForceType.GATEKEEPER)) > 0:
                 return False
-            if self.unit(UnitType.BASE) > 1:
+            if len(self.unit(UnitType.BASE)) > 1:
                 return False
             return True
 
         productions = self.productions[:]
-
-        if canWait(self):
+        if canWait(self) or (self.aStage.enemies.aroundStrength(self.castle.point,
+                                                                5) > 50000 and distToUnits(self.castle.point,
+                                                                                          self.unit(
+                                                                                              UnitType.BASE)) != 0):
             if generate(self, self.castle):
                 print >> sys.stderr, "城待機"
                 productions.remove(self.castle)
@@ -130,7 +132,7 @@ class Brain():
                 if self.aStage.resourceNum < Cost[UnitType.FIGHTER.value]:
                     return
                 if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                    t = UnitType.FIGHTER.value +random.randint(0, 1)
+                    t = UnitType.FIGHTER.value + random.randint(0, 1)
                 else:
                     t = UnitType.FIGHTER.value
                 self.actions[base.cid] = t
@@ -140,10 +142,13 @@ class Brain():
             if not self.enemyCastle:
                 if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
                     return
-                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value] and self.aStage.five:
                     t = UnitType.FIGHTER.value
                 else:
-                    t = UnitType.KNIGHT.value
+                    if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                        t = UnitType.ASSASSIN.value
+                    else:
+                        t = UnitType.KNIGHT.value  # + random.randint(0, 1)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
                 continue
@@ -168,7 +173,7 @@ class Brain():
             for resource in self.resources:
                 if resource.mother and not self.aStage.supporter.units.get(resource.mother.cid):
                     resource.mother = None
-                if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 5) > 500:
+                if not resource.mother:  # and self.aStage.enemies.aroundStrength(resource.point, 5) > 500:
                     r.append(resource)
 
             return r
@@ -197,21 +202,26 @@ class Brain():
         resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
         forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
-        if not self.aStage.supporter.unit[UnitType.BASE]:
-            return
+
 
         for force in forces:
             if force.forceType == ForceType.NEET:
-                if force.type == UnitType.ASSASSIN and resources:
+                if force.type == UnitType.ASSASSIN and resources and len(forces) > 10:
                     force.forceType = ForceType.HOUSE_SITTING
                 elif force.type == UnitType.KNIGHT and len(self.forceUnit(self.unit(UnitType.KNIGHT),
-                                                                          ForceType.GATEKEEPER)) < GATEKEEPERS:
+                                                                          ForceType.GATEKEEPER)) < GATEKEEPERS and len(forces) > 20:
                     force.forceType = ForceType.GATEKEEPER
                 else:
                     if not self.enemyCastle and not self.defenceMode and len(forces) < FORCE_EXPLORER_NUM:
                         force.forceType = ForceType.CASTLE_EXPLORER
                     if self.aStage.turnNum % GROUP_INTERVAL == 0:
-                        force.forceType = ForceType.ATTACKER
+
+                        if int(self.aStage.turnNum % (GROUP_INTERVAL * 4) < 2) and self.aStage.supporter.aroundStrength(
+                            self.castle.point, DEFENCE_RANGE) < self.aStage.enemies.aroundStrength(self.castle.point,
+                                                                                                   DEFENCE_RANGE):
+                            force.forceType = ForceType.GATEKEEPER
+                        else:
+                            force.forceType = ForceType.ATTACKER
                         force.rightRate = int(self.aStage.turnNum % (GROUP_INTERVAL * 2) == 0)
 
 
@@ -252,7 +262,7 @@ class Brain():
             if self.isAttack:
                 pioneerNum = 1
             elif len(workers) > 30:
-                pioneerNum = 2
+                pioneerNum = 3
 
             for dist, point, worker in table:
                 if worker in usedWorker or point in usedPoint:
@@ -353,7 +363,7 @@ class Brain():
 
             for worker in fWorkers:
                 if worker not in used and distToUnits(worker.point, self.resources) != 0:
-                    d = worker.goToPoint(Point(MAPSIZE - 1, MAPSIZE - 1))
+                    d = worker.goToPoint(self.aStage.enemies.strongest(worker.point, 5)[0])
                     if d:
                         self.actions[worker.cid] = d
 
@@ -365,7 +375,7 @@ class Brain():
         def buildBase(self, workers):
             halfStrength = self.aStage.enemies.rangeStrength(self.castle.point, Point(SILBER_POINT, SILBER_POINT))
             print >> sys.stderr, "strength:", halfStrength, self.aStage.five
-            if halfStrength > 200 and len(self.unit(UnitType.BASE)) < 1 and self.aStage.five:
+            if self.aStage.isStartEnemyAttack and len(self.unit(UnitType.BASE)) < 1 and self.aStage.five:
                 worker = min(workers, key=lambda x: x.point.dist(self.castle.point))
             else:
                 zero = Point(60, 60)
@@ -379,7 +389,7 @@ class Brain():
             # lila
             if not self.isAttack:
                 return False
-            if self.aStage.resourceNum < Cost[UnitType.BASE] + 100:
+            if self.aStage.resourceNum < Cost[UnitType.BASE] + 200 * int(self.aStage.five):
                 return False
             if len(self.unit(UnitType.BASE)) > 1 and self.aStage.resourceNum < Cost[UnitType.BASE] * 2:
                 return False
@@ -387,7 +397,7 @@ class Brain():
 
         def selectGatekeeper(self, workers):
             if self.aStage.turnNum > KEEP_WORKER and len(self.forceUnit(self.unit(UnitType.WORKER),
-                                                                    ForceType.GATEKEEPER)) < 1:
+                                                                        ForceType.GATEKEEPER)) < 1:
                 for worker in workers:
                     if worker.point == self.castle.point:
                         worker.forceType = ForceType.GATEKEEPER

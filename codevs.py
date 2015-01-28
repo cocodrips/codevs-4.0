@@ -25,7 +25,7 @@ class ForceType(enum.IntEnum):
     CASTLE_EXPLORER = 9
 
 
-
+Weak = [0, UnitType.FIGHTER, UnitType.ASSASSIN, UnitType.KNIGHT]
 Cost = [40, 20, 40, 60, 0, 100, 500]
 Range = [4, 4, 4, 4, 10, 10, 4]
 AttackRange = [2, 2, 2, 2, 10, 2, 2]
@@ -53,6 +53,7 @@ DEFENCE_THRESHOLD = 1500
 FORCE_EXPLORER_NUM = 40
 DEFENCE_RANGE = 60
 GATEKEEP_STRENGTH = 200
+WORKER_PRODUCTION_DAMAGE = 400
 
 # Distance
 def distToUnits(point, targets):

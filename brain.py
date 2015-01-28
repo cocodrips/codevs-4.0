@@ -82,7 +82,12 @@ class Brain():
     def isEnemy(self):
         return len(self.aStage.enemies.forces()) > 0
 
-    ################################################
+    @property
+    def weakType(self):
+        return self.aStage.enemies.weakType
+
+
+################################################
 
 
     def product(self):
@@ -129,14 +134,16 @@ class Brain():
     def base(self):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if self.defenceMode:
-                if self.aStage.resourceNum < Cost[UnitType.FIGHTER.value]:
-                    return
-                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                    t = UnitType.FIGHTER.value + random.randint(0, 1)
-                else:
-                    t = UnitType.FIGHTER.value
-                self.actions[base.cid] = t
-                self.aStage.resourceNum -= Cost[t]
+                # if self.aStage.resourceNum < Cost[UnitType.FIGHTER.value]:
+                #     return
+                # if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                #     t = UnitType.FIGHTER.value + random.randint(0, 1)
+                # else:
+                #     t = UnitType.FIGHTER.value
+                if self.aStage.resourceNum < Cost[self.weakType.value]:
+                    break
+                self.actions[base.cid] = self.weakType.value
+                self.aStage.resourceNum -= Cost[self.weakType.value]
                 continue
 
             if not self.enemyCastle:
@@ -153,11 +160,11 @@ class Brain():
                 self.aStage.resourceNum -= Cost[t]
                 continue
 
-            if self.aStage.resourceNum < Cost[UnitType.ASSASSIN.value]:
+            if self.aStage.resourceNum < Cost[self.weakType.value]:
                 return
 
             else:
-                t = UnitType.KNIGHT.value + random.randint(0, 2)
+                t = self.weakType.value
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
 
@@ -202,7 +209,6 @@ class Brain():
         resources = unsafetyResource(self)
         units = self.aStage.supporter.unit
         forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
-
 
         for force in forces:
 

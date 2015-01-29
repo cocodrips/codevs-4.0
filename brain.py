@@ -138,16 +138,17 @@ class Brain():
         resources = self.unsafetyResource()
         forces = self.forces
         for base in self.aStage.supporter.unit[UnitType.BASE]:
+            t = ""
             if not self.enemyCastle:
                 if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
                     return
                 if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value] and self.aStage.five and self.aStage.enemies.forces():
                     t = UnitType.FIGHTER.value
                 else:
-                    # if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                    #     t = UnitType.ASSASSIN.value
-                    # else:
-                    t = UnitType.KNIGHT.value  # + random.randint(0, 1)
+                    if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                        t = UnitType.ASSASSIN.value
+                    else:
+                        t = UnitType.KNIGHT.value  # + random.randint(0, 1)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
                 continue

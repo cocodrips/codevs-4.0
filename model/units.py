@@ -19,6 +19,7 @@ class Units:
         self._aroundStrength = {}
         self._strongest = {}
         self._damageTable = self.damageTable()
+        self.weakType = self.getWeakType()
 
     def forces(self):
         g = []
@@ -43,6 +44,10 @@ class Units:
                         map[x][y] += Strength[v] / (abs(i) + abs(j) + r)
         self.map = map
         self.strengthMap = self.cumulativeSumTable(map)
+
+
+    def getWeakType(self):
+        return Weak[max([UnitType.KNIGHT, UnitType.FIGHTER, UnitType.ASSASSIN], key=lambda x:len(self.unit[x.value])).value]
 
     def aroundStrength(self, point, size):
         if self._aroundStrength.get((point, size)):

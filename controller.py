@@ -31,7 +31,9 @@ def turnInput(aBrain, t, s):
             units.pop(key)
 
 
+    aBrain.aStage.enemies.units = {k: v for k, v in aBrain.aStage.enemies.units.items() if v.type not in FORGET_SET}
     enemies = aBrain.aStage.enemies.units
+
     M = int(raw_input())
     for i in xrange(M):
         cid, y, x, hp, utype = map(int, raw_input().split())

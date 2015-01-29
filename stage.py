@@ -25,6 +25,17 @@ class Stage(object):
         self.GRID = 10
         self.field = [[0 for _ in xrange(100 / self.GRID)] for _ in xrange(100 / self.GRID)]
 
+        self.ai = AI.unknown
+        self.isGrun = F.UNKNOWN
+
+
+    @property
+    def is20(self):
+        return 27 <= self.turnNum < 34
+
+    @property
+    def is30(self):
+        return 34 <= self.turnNum
 
     def startTurn(self):
         # Initialize units.
@@ -34,10 +45,23 @@ class Stage(object):
         self.updateVisitPoint()
         self.updateUnits()
         if self.turnNum == 6:
+            print >> sys.stderr, self.supporter.units.keys()
             self.five = sorted(self.supporter.units.keys())[-1] != 12
         self.isStartEnemyAttack |= len(self.enemies.forces()) > 0
-
         self._searchPoints = []
+
+        ##
+        if self.isGrun == F.UNKNOWN:
+            self.grun()
+
+    def grun(self):
+        vs = self.enemies.unit[UnitType.VILLAGE]
+        for v in vs:
+            if v.point.x + v.point.y != 110:
+                self.isGrun == F.FALSE
+            elif v.point.x + v.point.y == 110 and not self.resources.get(v.point):
+                self.isGrun = F.TRUE
+
 
     def nearestResouce(self, character):
         closest = None
@@ -102,6 +126,7 @@ class Stage(object):
 
         if not character.goal:
             character.goal.append(Point(MAPSIZE - 5 - (self.turnNum % 6) * 5, MAPSIZE - 1))
+            character.goal.append(Point(MAPSIZE - 5 - (self.turnNum % 6) * 5, MAPSIZE - 45))
 
 
     def updateVisitPoint(self):
@@ -122,12 +147,16 @@ class Stage(object):
         return searchPoints
 
     def emptyResources(self):
-        return [r for r in self.resources.values() if len(r.volunteer) < self.workerThrehold]
+        return [r for r in self.resources.values() if
+                len(r.volunteer) < self.workerThrehold and self.enemies.damage(r.point) < WORKER_PRODUCTION_DAMAGE]
 
     # Update & Reset
     def updateUnits(self):
         for v in self.resources.values():
             v.reset()
+
+
+
 
     # controller.py
     def updateResource(self, point):

@@ -41,6 +41,7 @@ class Stage(object):
         self.updateVisitPoint()
         self.updateUnits()
         if self.turnNum == 6:
+            print >> sys.stderr, self.supporter.units.keys()
             self.five = sorted(self.supporter.units.keys())[-1] != 12
         self.isStartEnemyAttack |= len(self.enemies.forces()) > 0
 

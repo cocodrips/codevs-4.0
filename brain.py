@@ -13,7 +13,7 @@ class Brain():
         self.aStage = stage.Stage()
         self.actions = []
         self.exp = []
-        self.bet = [Point(i, i) for i in xrange(31, MAPSIZE, 9)]
+        self.bet = [[Point(i, i) for i in xrange(31, MAPSIZE, 9)]]
         self.pioneerMap = []
 
         for i in xrange(4, MAPSIZE, 9):
@@ -86,6 +86,10 @@ class Brain():
     def weakType(self):
         return self.aStage.enemies.weakType
 
+    @property
+    def forces(self):
+        return self.aStage.supporter.forces()
+
 
     ################################################
 
@@ -93,8 +97,7 @@ class Brain():
     def product(self):
         def generate(self, production):
             # 何度も呼ぶので無駄
-            margin = len(self.unit(UnitType.BASE)) * Cost[self.weakType.value] + Cost[UnitType.WORKER.value]
-
+            margin = len(self.unit(UnitType.BASE)) * Cost[self.weakType.value] + Cost[UnitType.WORKER.value] # len(self.unit(UnitType.BASE)) *
             if self.aStage.resourceNum >= margin:
                 self.aStage.resourceNum -= Cost[UnitType.WORKER.value]
                 self.actions[production.cid] = UnitType.WORKER.value
@@ -118,7 +121,7 @@ class Brain():
                                                                                            self.unit(
                                                                                                UnitType.BASE)) != 0):
             if generate(self, self.castle):
-                print >> sys.stderr, "城待機"
+                print >> sys.stderr, self.aStage.turnNum, "城待機"
                 productions.remove(self.castle)
 
         emptyResources = self.aStage.emptyResources()
@@ -132,20 +135,28 @@ class Brain():
 
 
     def base(self):
+        resources = self.unsafetyResource()
+        forces = self.forces
         for base in self.aStage.supporter.unit[UnitType.BASE]:
             if not self.enemyCastle:
                 if self.aStage.resourceNum < Cost[UnitType.KNIGHT.value]:
                     return
-                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value] and self.aStage.five:
+                if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value] and self.aStage.five and self.aStage.enemies.forces():
                     t = UnitType.FIGHTER.value
                 else:
-                    if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
-                        t = UnitType.ASSASSIN.value
-                    else:
-                        t = UnitType.KNIGHT.value  # + random.randint(0, 1)
+                    # if self.aStage.resourceNum >= Cost[UnitType.ASSASSIN.value]:
+                    #     t = UnitType.ASSASSIN.value
+                    # else:
+                    t = UnitType.KNIGHT.value  # + random.randint(0, 1)
                 self.actions[base.cid] = t
                 self.aStage.resourceNum -= Cost[t]
                 continue
+            if resources and len(forces) > 20:
+                if self.aStage.resourceNum > Cost[UnitType.ASSASSIN.value]:
+                    t = UnitType.ASSASSIN.value
+                    self.actions[base.cid] = t
+                    self.aStage.resourceNum -= Cost[t]
+                return
 
             if self.aStage.resourceNum < Cost[self.weakType.value]:
                 return
@@ -198,8 +209,7 @@ class Brain():
             return force.goToPoint(point)
 
         resources = self.unsafetyResource()
-        units = self.aStage.supporter.unit
-        forces = units[UnitType.ASSASSIN] + units[UnitType.FIGHTER] + units[UnitType.KNIGHT]
+        forces = self.forces
 
         for force in forces:
             if force.forceType == ForceType.NEET:
@@ -292,8 +302,7 @@ class Brain():
                     worker.goal.insert(0, cResource.point)
 
             if self.bet:
-                worker.goal = self.bet
-                self.bet = []
+                worker.goal = self.bet.pop()
                 worker.rightRate = 0.5
                 d = worker.goToPoint(worker.goal[0])
                 if d:
@@ -390,7 +399,7 @@ class Brain():
                 return False
             if self.aStage.resourceNum < Cost[UnitType.BASE] + 200 * int(self.aStage.five):
                 return False
-            if len(self.unit(UnitType.BASE)) > 1 and self.aStage.resourceNum < Cost[UnitType.BASE] * 2:
+            if len(self.unit(UnitType.BASE)) > 0 and self.aStage.resourceNum < Cost[UnitType.BASE.value] * 2:
                 return False
             return True
 
@@ -458,7 +467,7 @@ class Brain():
                 continue
             diff = sum([Strength[m.type.value] for m in resource.mother]) < self.aStage.enemies.aroundStrength(
                 resource.point, 5)
-            if not resource.mother and self.aStage.enemies.aroundStrength(resource.point, 5) > 400:
+            if not resource.mother: #and self.aStage.enemies.aroundStrength(resource.point, 5) > 400:
                 r.append((resource, diff))
 
         return r

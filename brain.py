@@ -7,10 +7,11 @@ import sys
 import copy
 import random
 import grun
-from default_worker import CommandWorker
-from default_force import CommandForce
-from default_product import CommandProduct
-from default_base import CommandBase
+from default_worker import DefaultWorker
+from default_force import DefaultForce
+from default_product import DefaultProduct
+from default_base import DefaultBase
+
 
 class Brain():
     def __init__(self):
@@ -36,14 +37,14 @@ class Brain():
         self.ai = self.judgeAI()
 
         print >> sys.stderr, self.ai
-        # if self.ai == AI.grun:
-        #     grun.order(self)
-        # else:
-        self.order()
+        if self.ai == AI.grun:
+            grun.order(self)
+        else:
+            self.order()
 
     def judgeAI(self):
         if self.aStage.isGrun == F.TRUE:
-            if not self.aStage.five: #and not (self.aStage.is20 or self.aStage.is30): #本番のみ
+            if not self.aStage.five:  # and not (self.aStage.is20 or self.aStage.is30): #本番のみ
                 return AI.grun
         return AI.unknown
 
@@ -57,10 +58,10 @@ class Brain():
                                                               Range[UnitType.CASTLE]) > DEFENCE_THRESHOLD
         # print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
         # 順番考える
-        self.work(CommandWorker(self))
-        self.product(CommandProduct(self))
-        self.base(CommandBase(self))
-        self.force(CommandForce(self))
+        self.work(DefaultWorker(self))
+        self.product(DefaultProduct(self))
+        self.base(DefaultBase(self))
+        self.force(DefaultForce(self))
 
     ###############################################
     def unit(self, unitType):
@@ -111,7 +112,6 @@ class Brain():
 
 
     def product(self, command):
-        margin = len(self.unit(UnitType.BASE)) * Cost[self.weakType.value] + Cost[UnitType.WORKER.value] # len(self.unit(UnitType.BASE)) *
         productions = self.productions[:]
         if command.canWait():
             if command.generate(self.castle):
@@ -125,30 +125,22 @@ class Brain():
                 canGenerateProductions.add(closestUnit(r.point, productions))
 
         for p in canGenerateProductions:
-            command.generate(p, margin)
+            command.generate(p)
 
 
     def base(self, command):
-        resources = self.unsafetyResource()
         for base in self.aStage.supporter.unit[UnitType.BASE]:
-            t = ""
             if not self.enemyCastle:
-                command.noCastle(base)
-            if resources:
-                if command.housesit(base):
-                    return
+                if command.noCastle(base):
+                    continue
 
-            if self.aStage.resourceNum < Cost[self.weakType.value]:
-                return
+            if command.housesit(base):
+                continue
 
-            else:
-                t = self.weakType.value
-                self.actions[base.cid] = t
-                self.aStage.resourceNum -= Cost[t]
-
+            command.default(base)
 
     def force(self, command):
-        resources = self.unsafetyResource()
+        resources = command.unsafetyResource()
         forces = self.forces
 
         for force in forces:
@@ -163,7 +155,7 @@ class Brain():
                 d = command.gatekeeper(force)
 
             if force.forceType == ForceType.HOUSE_SITTING:
-                d = command.houseSitting(force,resources)
+                d = command.houseSitting(force, resources)
 
             if force.forceType == ForceType.WALKER:
                 d = command.walker(force)
@@ -222,16 +214,3 @@ class Brain():
     def checkPoint(self, character):
         if character.goal and character.goal[0] == character.point:
             character.goal.pop(0)
-
-    def unsafetyResource(self):
-        r = []
-        for resource in self.resources: #+ self.aStage.enemies.unit[UnitType.VILLAGE]:
-            resource.mother = [m for m in resource.mother if self.aStage.supporter.units.get(m.cid)]
-            if len(resource.mother) > 3:
-                continue
-            diff = sum([Strength[m.type.value] for m in resource.mother]) < self.aStage.enemies.aroundStrength(
-                resource.point, 5)
-            if not resource.mother: #and self.aStage.enemies.aroundStrength(resource.point, 5) > 400:
-                r.append((resource, diff))
-
-        return r

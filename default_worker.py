@@ -3,7 +3,7 @@ from codevs import *
 from model import Point
 import sys
 
-class CommandWorker(object):
+class DefaultWorker(object):
     def __init__(self, brain):
         """
         :type brain: brain.Brain

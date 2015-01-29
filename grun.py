@@ -3,6 +3,11 @@ from codevs import *
 from model import Point
 import sys
 
+from default_worker import DefaultWorker
+from default_force import DefaultForce
+from default_product import DefaultProduct
+from default_base import DefaultBase
+
 
 def order(self):
     """
@@ -10,10 +15,19 @@ def order(self):
     """
 
     self.isAttack = len(self.unit(UnitType.WORKER)) > INCOME
-    self.defenceMode = self.aStage.enemies.aroundStrength(self.castle.point,
-                                                          Range[UnitType.CASTLE]) > DEFENCE_THRESHOLD
+    self.work(Worker(self))
+    self.product(Product(self))
+    self.base(Base(self))
+    self.force(Force(self))
 
-    self.work()
-    self.product()
-    self.base()
-    self.force()
+class Worker(DefaultWorker):
+    pass
+
+class Force(DefaultForce):
+    pass
+
+class Base(DefaultBase):
+    pass
+
+class Product(DefaultProduct):
+    pass

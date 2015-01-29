@@ -3,7 +3,7 @@ from codevs import *
 from model import Point
 import sys
 
-class CommandProduct(object):
+class DefaultProduct(object):
     def __init__(self, brain):
         """
         :type brain: brain.Brain
@@ -11,7 +11,7 @@ class CommandProduct(object):
         self.brain = brain
     
     def generate(self, production):
-        margin = len(self.unit(UnitType.BASE)) * Cost[self.weakType.value] + Cost[UnitType.WORKER.value] # len(self.unit(UnitType.BASE)) *
+        margin = len(self.brain.unit(UnitType.BASE)) * Cost[self.brain.weakType.value] + Cost[UnitType.WORKER.value] # len(self.unit(UnitType.BASE)) *
 
         # 何度も呼ぶので無駄
         if self.brain.aStage.resourceNum >= margin:

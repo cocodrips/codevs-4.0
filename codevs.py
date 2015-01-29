@@ -3,6 +3,7 @@
 import enum
 import copy
 
+
 class UnitType(enum.IntEnum):
     WORKER = 0
     KNIGHT = 1
@@ -11,6 +12,7 @@ class UnitType(enum.IntEnum):
     CASTLE = 4
     VILLAGE = 5
     BASE = 6
+
 
 class ForceType(enum.IntEnum):
     GATEKEEPER = 0
@@ -24,6 +26,8 @@ class ForceType(enum.IntEnum):
     NEET = 8
     CASTLE_EXPLORER = 9
 
+
+FORGET_SET = set([UnitType.WORKER, UnitType.KNIGHT, UnitType.FIGHTER, UnitType.ASSASSIN])
 
 Weak = [0, UnitType.FIGHTER, UnitType.ASSASSIN, UnitType.KNIGHT]
 Cost = [40, 20, 40, 60, 0, 100, 500]
@@ -41,7 +45,7 @@ GATEKEEPERS = 5
 GROUP_INTERVAL = 10
 
 
-#PIONEER_NUM
+# PIONEER_NUM
 PIONEER_NUM = 5
 KEEP_WORKER = 40
 
@@ -65,6 +69,7 @@ def distToUnits(point, targets):
     if not targets or not point:
         return INF
     return min([point.dist(target.point) for target in targets])
+
 
 def closestUnit(point, targets):
     """

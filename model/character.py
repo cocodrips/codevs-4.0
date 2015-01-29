@@ -15,7 +15,7 @@ class Character(object):
         self.group = []
         self.forceType = forceType
         self.rightRate = 0.2 * (self.cid % 10)
-
+        self.mother = []
 
     def goToPoint(self, point):
         if random.random() > self.rightRate:

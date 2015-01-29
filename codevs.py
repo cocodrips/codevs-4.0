@@ -26,6 +26,25 @@ class ForceType(enum.IntEnum):
     NEET = 8
     CASTLE_EXPLORER = 9
 
+class F(enum.IntEnum):
+    UNKNOWN = 0,
+    TRUE = 1,
+    FALSE = 2
+
+class AI(enum.IntEnum):
+    rosa = 0,
+    colun = 1,
+    zinnober = 2,
+    gelb = 3,
+    silber = 4,
+    chokudai = 5,
+    schwarz = 6,
+    grun = 7,
+    lila = 8,
+    unknown = 9
+
+
+
 
 FORGET_SET = set([UnitType.WORKER, UnitType.KNIGHT, UnitType.FIGHTER, UnitType.ASSASSIN])
 

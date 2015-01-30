@@ -49,7 +49,7 @@ class Worker(DefaultWorker):
 
 class Force(DefaultForce):
     def neet(self, force, forces, resources):
-        if resources and len(forces) > 20 and force.type == UnitType.ASSASSIN:
+        if resources and len(forces) > 50 and force.type == UnitType.ASSASSIN:
             force.forceType = ForceType.HOUSE_SITTING
         elif self.brain.aStage.turnNum % GROUP_INTERVAL == 0: # 資源で数かえる
             if len(self.brain.forceUnit(self.brain.forces, ForceType.GATEKEEPER)) < 200:

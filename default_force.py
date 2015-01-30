@@ -72,6 +72,14 @@ class DefaultForce(object):
             point = p
         return force.goToPoint(point)
 
+    def attack(self, force):
+        self.brain.aStage.castlePoint(force)
+        return force.goToPoint(force.goal[0])
+
+
+    def explorer(self, force):
+        self.attack(force)
+
 
     def walker(self, force):
         point, strength = self.brain.aStage.enemies.strongest(force.point, MAPSIZE)

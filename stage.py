@@ -27,6 +27,8 @@ class Stage(object):
 
         self.ai = AI.unknown
         self.isGrun = F.UNKNOWN
+        self.assasin = F.UNKNOWN # ASSASSINが4対以上か？
+        self.hasVillage = F.UNKNOWN
 
 
     @property
@@ -53,6 +55,10 @@ class Stage(object):
         ##
         if self.isGrun == F.UNKNOWN:
             self.grun()
+        if self.assasin == F.UNKNOWN:
+            self.assasinNum()
+        if self.hasVillage == F.UNKNOWN:
+            self.village()
 
     def grun(self):
         vs = self.enemies.unit[UnitType.VILLAGE]
@@ -62,6 +68,15 @@ class Stage(object):
             elif v.point.x + v.point.y == 110 and not self.resources.get(v.point):
                 self.isGrun = F.TRUE
 
+    def assasinNum(self):
+         if self.turnNum > 155 or len([a for a in self.enemies.unit[UnitType.ASSASSIN] if a.point.x + a.point.y < 160]) < 5:
+            return
+         else:
+            self.assasin = F.TRUE
+
+    def village(self):
+        if len(self.enemies.unit[UnitType.VILLAGE]) > 0:
+            self.hasVillage = F.TRUE
 
     def nearestResouce(self, character):
         closest = None
@@ -115,6 +130,7 @@ class Stage(object):
     def castlePoint(self, character):
         castle = self.enemies.unit[UnitType.CASTLE.value]
         if castle:
+            p = min([p for p in [Point(-1,-1), Point(1, -1), Point(0, -2), Point(-2, 0)]], key=lambda x:castle[0].point.dist(p))
             character.goal = [castle[0].point.plus(Point(-1, -1))]
             character.isFix = True
             return

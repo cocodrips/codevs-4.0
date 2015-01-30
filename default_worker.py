@@ -118,11 +118,19 @@ class DefaultWorker(object):
                     resource.planners.append(worker)
                 else:
                     # on resource
-                    if len(self.brain.unit(ForceType.WORKER)) < INCOME and distToUnits(worker.point,
+                    # 逃げる
+                    if self.brain.aStage.enemies.aroundStrength(resource.point,Range[UnitType.WORKER]) > 500:
+
+                        p = self.brain.aStage.enemies.weakestDirection(resource.point)
+                        d = worker.goToPoint(p)
+                        resource.planners.append(worker)
+                    # 逃げない
+                    else:
+                        if len(self.brain.unit(ForceType.WORKER)) < INCOME and distToUnits(worker.point,
                                                                                  self.brain.productions) >= PRODUCTION_INTERVAL and self.brain.aStage.enemies.aroundStrength(worker.point, 6) < 1000:
-                        self.brain.actions[worker.cid] = UnitType.VILLAGE.value
-                        self.brain.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
-                    resource.workers.append(worker)
+                            self.brain.actions[worker.cid] = UnitType.VILLAGE.value
+                            self.brain.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
+                        resource.workers.append(worker)
 
         for worker in fWorkers:
             if worker not in used and distToUnits(worker.point, self.brain.resources) != 0:

@@ -47,7 +47,8 @@ class Units:
 
 
     def getWeakType(self):
-        return Weak[max([UnitType.KNIGHT, UnitType.FIGHTER, UnitType.ASSASSIN], key=lambda x:len(self.unit[x.value])).value]
+        return Weak[
+            max([UnitType.KNIGHT, UnitType.FIGHTER, UnitType.ASSASSIN], key=lambda x: len(self.unit[x.value])).value]
 
     def aroundStrength(self, point, size):
         if self._aroundStrength.get((point, size)):
@@ -113,5 +114,11 @@ class Units:
                     total -= strengthMap[r - 1][c - 1]
                 strengthMap[r][c] = total + map[r][c]
         return strengthMap
+
+    def weakestDirection(self, point):
+        directions = [Point(0, 1), Point(0, -1), Point(1, 0), Point(-1, 0)]
+        d = min(directions, key=lambda d: self.damage(point.plus(d)))
+        return point.plus(d)
+
 
 

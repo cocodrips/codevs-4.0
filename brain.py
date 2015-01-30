@@ -6,7 +6,7 @@ import random
 import sys
 import copy
 import random
-import grun, lila
+import grun, lila, schwarz
 from default_worker import DefaultWorker
 from default_force import DefaultForce
 from default_product import DefaultProduct
@@ -39,19 +39,20 @@ class Brain():
         print >> sys.stderr, self.aStage.turnNum, self.ai
         if self.ai == AI.grun:
             grun.order(self)
-        if self.ai == AI.lila:
+        elif self.ai == AI.lila:
             lila.order(self)
+        elif self.ai == AI.schwarz:
+            schwarz.order(self)
         else:
             self.order()
 
     def judgeAI(self):
         if not self.aStage.five: # and not (self.aStage.is20 or self.aStage.is30): #本番のみ
-            # print >> sys.stderr, self.aStage.isGrun, self.aStage.assasin, self.aStage.hasVillage
             if self.aStage.isGrun == F.TRUE:
                 return AI.grun
             if self.aStage.assasin == F.TRUE and self.aStage.hasVillage == F.UNKNOWN:
                 return AI.schwarz
-            if self.aStage.hasVillage == F.TRUE:
+            if self.aStage.hasVillage == F.TRUE and self.aStage.isCastleBase != F.FALSE:
                 return AI.lila
 
         return AI.unknown

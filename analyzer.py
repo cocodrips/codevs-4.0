@@ -1,7 +1,7 @@
 import collections
 import re
 
-with open('result/result4.txt', 'r') as r:
+with open('result/result5.txt', 'r') as r:
     p = re.compile("stage (\d+) \(vs (.*)\) : result=(.+)  score.* turn=(.*) ")
     d = collections.defaultdict(list)
     for line in r:
@@ -13,7 +13,7 @@ with open('result/result4.txt', 'r') as r:
             elif 27 <= int(num) < 34:
                 d[name + " - 20"].append((num, isWin, turn))
             else:
-                d[name + " - 30"].append((num, isWin, turn))
+                d[name + " -  30"].append((num, isWin, turn))
 
     for k, v in sorted(d.items()):
         print k

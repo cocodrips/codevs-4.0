@@ -30,6 +30,7 @@ class Stage(object):
         self.assasin = F.UNKNOWN # ASSASSINが4対以上か？
         self.hasVillage = F.UNKNOWN
         self.isCastleBase = F.UNKNOWN
+        self.isSilber = F.UNKNOWN
 
 
     @property
@@ -62,6 +63,16 @@ class Stage(object):
             self.village()
         if self.isCastleBase == F.UNKNOWN:
             self.castleBase()
+        if self.isSilber == F.UNKNOWN:
+            self.silber()
+
+    def silber(self):
+        if self.supporter.unit[UnitType.BASE]:
+            return
+        if self.enemies.unit[UnitType.KNIGHT]:
+            self.isSilber = F.TRUE
+
+
 
     def grun(self):
         vs = self.enemies.unit[UnitType.VILLAGE]

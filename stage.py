@@ -29,6 +29,8 @@ class Stage(object):
         self.isGrun = F.UNKNOWN
         self.assasin = F.UNKNOWN # ASSASSINが4対以上か？
         self.hasVillage = F.UNKNOWN
+        self.isCastleBase = F.UNKNOWN
+        self.isSilber = F.UNKNOWN
 
 
     @property
@@ -59,6 +61,18 @@ class Stage(object):
             self.assasinNum()
         if self.hasVillage == F.UNKNOWN:
             self.village()
+        if self.isCastleBase == F.UNKNOWN:
+            self.castleBase()
+        if self.isSilber == F.UNKNOWN:
+            self.silber()
+
+    def silber(self):
+        if self.supporter.unit[UnitType.BASE]:
+            return
+        if self.enemies.unit[UnitType.KNIGHT]:
+            self.isSilber = F.TRUE
+
+
 
     def grun(self):
         vs = self.enemies.unit[UnitType.VILLAGE]
@@ -77,6 +91,21 @@ class Stage(object):
     def village(self):
         if len(self.enemies.unit[UnitType.VILLAGE]) > 0:
             self.hasVillage = F.TRUE
+
+    def castleBase(self):
+        bases = self.enemies.unit[UnitType.BASE]
+        if bases:
+            if bases[0].point.x + bases[0].point.y < 160:
+                self.isCastleBase = F.FALSE
+                return
+            if self.enemies.unit[UnitType.CASTLE]:
+                for base in bases:
+                    if base.point != self.enemies.unit[UnitType.CASTLE][0].point:
+                        self.isCastleBase = F.FALSE
+                    if base.point == self.enemies.unit[UnitType.CASTLE][0].point:
+                        self.isCastleBase = F.TRUE
+
+
 
     def nearestResouce(self, character):
         closest = None

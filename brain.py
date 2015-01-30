@@ -6,7 +6,7 @@ import random
 import sys
 import copy
 import random
-import grun
+import grun, lila
 from default_worker import DefaultWorker
 from default_force import DefaultForce
 from default_product import DefaultProduct
@@ -36,16 +36,24 @@ class Brain():
         self.actions = {}
         self.ai = self.judgeAI()
 
-        print >> sys.stderr, self.ai
+        print >> sys.stderr, self.aStage.turnNum, self.ai
         if self.ai == AI.grun:
             grun.order(self)
+        if self.ai == AI.lila:
+            lila.order(self)
         else:
             self.order()
 
     def judgeAI(self):
-        if self.aStage.isGrun == F.TRUE:
-            if not self.aStage.five:  # and not (self.aStage.is20 or self.aStage.is30): #本番のみ
+        if not self.aStage.five: # and not (self.aStage.is20 or self.aStage.is30): #本番のみ
+            # print >> sys.stderr, self.aStage.isGrun, self.aStage.assasin, self.aStage.hasVillage
+            if self.aStage.isGrun == F.TRUE:
                 return AI.grun
+            if self.aStage.assasin == F.TRUE and self.aStage.hasVillage == F.UNKNOWN:
+                return AI.schwarz
+            if self.aStage.hasVillage == F.TRUE:
+                return AI.lila
+
         return AI.unknown
 
 
@@ -58,10 +66,12 @@ class Brain():
                                                               Range[UnitType.CASTLE]) > DEFENCE_THRESHOLD
         # print >> sys.stderr, self.isAttack, self.aStage.turnNum, len(self.pioneerMap)
         # 順番考える
+        # print >> sys.stderr, self.aStage.turnNum, len(self.aStage.enemies.unit[UnitType.ASSASSIN]), len(self.aStage.enemies.unit[UnitType.KNIGHT])
         self.work(DefaultWorker(self))
         self.product(DefaultProduct(self))
         self.base(DefaultBase(self))
         self.force(DefaultForce(self))
+
 
     ###############################################
     def unit(self, unitType):
@@ -161,8 +171,10 @@ class Brain():
                 d = command.walker(force)
 
             if force.forceType == ForceType.ATTACKER or force.forceType == ForceType.CASTLE_EXPLORER:
-                self.aStage.castlePoint(force)
-                d = force.goToPoint(force.goal[0])
+                d = command.attack(force)
+
+            if force.forceType == ForceType.EXPLORER:
+                d = command.explorer(force)
 
             if d:
                 self.actions[force.cid] = d

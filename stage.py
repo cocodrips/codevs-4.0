@@ -4,6 +4,7 @@ from codevs import *
 from model import Point, Units, Resource
 import random
 import sys
+import time
 
 
 class Stage(object):
@@ -31,7 +32,6 @@ class Stage(object):
         self.hasVillage = F.UNKNOWN
         self.isCastleBase = F.UNKNOWN
         self.isSilber = F.UNKNOWN
-
 
     @property
     def is20(self):

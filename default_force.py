@@ -95,3 +95,6 @@ class DefaultForce(object):
                 r.append((resource, diff))
 
         return r
+
+    def grunrun(self, force):
+        return False

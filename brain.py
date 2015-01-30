@@ -36,7 +36,7 @@ class Brain():
         self.actions = {}
         self.ai = self.judgeAI()
 
-        print >> sys.stderr, self.aStage.turnNum, self.ai
+        # print >> sys.stderr, self.aStage.turnNum, self.ai
         if self.ai == AI.grun:
             grun.order(self)
         elif self.ai == AI.lila:
@@ -137,21 +137,12 @@ class Brain():
                 print >> sys.stderr, self.aStage.turnNum, "城待機"
                 productions.remove(self.castle)
 
-        emptyResources = self.aStage.emptyResources()
-        canGenerateProductions = set()
-        for r in emptyResources:
-            if distToUnits(r.point, productions) < PRODUCTION_INTERVAL:
-                canGenerateProductions.add(closestUnit(r.point, productions))
-
-        for p in canGenerateProductions:
-            command.generate(p)
-
+        command.main(productions)
 
     def base(self, command):
         for base in self.aStage.supporter.unit[UnitType.BASE]:
-            if not self.enemyCastle:
-                if command.noCastle(base):
-                    continue
+            if not self.enemyCastle and command.noCastle(base):
+                continue
 
             if command.housesit(base):
                 continue
@@ -163,10 +154,11 @@ class Brain():
         forces = self.forces
 
         for force in forces:
-            if force.forceType == ForceType.NEET:
-                command.neet(force, forces, resources)
-            # 命令の種類
             d = None
+
+            if force.forceType == ForceType.NEET:
+                d = command.neet(force, forces, resources)
+            # 命令の種類
             # 役割の決まった兵士たちの行動
 
             # GATEKEEPER
@@ -184,6 +176,9 @@ class Brain():
 
             if force.forceType == ForceType.EXPLORER:
                 d = command.explorer(force)
+
+            if force.forceType == ForceType.GRUNRUN:
+                d = command.grunrun(force)
 
             if d:
                 self.actions[force.cid] = d

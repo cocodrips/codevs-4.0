@@ -127,7 +127,7 @@ class DefaultWorker(object):
                     # 逃げない
                     else:
                         if len(self.brain.unit(ForceType.WORKER)) < INCOME and distToUnits(worker.point,
-                                                                                 self.brain.productions) >= PRODUCTION_INTERVAL and self.brain.aStage.enemies.aroundStrength(worker.point, 6) < 1000:
+                                                                                 self.brain.productions) >= PRODUCTION_INTERVAL and self.brain.aStage.enemies.aroundStrength(worker.point, 6) < 1000  and self.brain.aStage.resourceNum >= Range[UnitType.VILLAGE.value]:
                             self.brain.actions[worker.cid] = UnitType.VILLAGE.value
                             self.brain.aStage.resourceNum -= Cost[UnitType.VILLAGE.value]
                         resource.workers.append(worker)
@@ -145,7 +145,6 @@ class DefaultWorker(object):
 
     def buildBase(self, workers):
         halfStrength = self.brain.aStage.enemies.rangeStrength(self.brain.castle.point, Point(SILBER_POINT, SILBER_POINT))
-        print >> sys.stderr, "strength:", halfStrength, self.brain.aStage.five
         if self.brain.aStage.isStartEnemyAttack and len(self.brain.unit(UnitType.BASE)) < 1 and self.brain.aStage.five:
             worker = min(workers, key=lambda x: x.point.dist(self.brain.castle.point))
         else:

@@ -35,3 +35,18 @@ class DefaultProduct(object):
         if len(self.brain.unit(UnitType.BASE)) > 1:
             return False
         return True
+
+    def main(self, productions):
+        emptyResources = self.emptyResources()
+        canGenerateProductions = set()
+        for r in emptyResources:
+            if distToUnits(r.point, productions) < PRODUCTION_INTERVAL:
+                canGenerateProductions.add(closestUnit(r.point, productions))
+
+        for p in canGenerateProductions:
+            self.generate(p)
+
+    def emptyResources(self):
+        return [r for r in self.brain.resources if
+                len(r.volunteer) < self.brain.aStage.workerThrehold and self.brain.aStage.enemies.damage(r.point) < WORKER_PRODUCTION_DAMAGE]
+

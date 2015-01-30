@@ -1,7 +1,7 @@
 import collections
 import re
 
-with open('result/result5.txt', 'r') as r:
+with open('result/result30', 'r') as r:
     p = re.compile("stage (\d+) \(vs (.*)\) : result=(.+)  score.* turn=(.*) ")
     d = collections.defaultdict(list)
     for line in r:

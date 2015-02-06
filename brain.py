@@ -21,6 +21,7 @@ class Brain():
         self.bet = [[Point(i, i) for i in xrange(31, MAPSIZE, 9)]]
         self.pioneerMap = []
 
+
         for i in xrange(4, MAPSIZE, 9):
             for j in xrange(4, MAPSIZE, 9):
                 if i == 0:
@@ -158,10 +159,9 @@ class Brain():
 
             if force.forceType == ForceType.NEET:
                 d = command.neet(force, forces, resources)
-            # 命令の種類
+
             # 役割の決まった兵士たちの行動
 
-            # GATEKEEPER
             if force.forceType == ForceType.GATEKEEPER:
                 d = command.gatekeeper(force)
 

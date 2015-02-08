@@ -15,7 +15,7 @@ def turnInput(aBrain, t, s):
     turnNum = aBrain.aStage.turnNum
     units = aBrain.aStage.supporter.units
     unitsId = []
-
+    isSecond = False
     for i in xrange(N):
         cid, y, x, hp, utype = map(int, raw_input().split())
         if utype == UnitType.CASTLE.value:

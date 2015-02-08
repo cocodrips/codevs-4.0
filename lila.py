@@ -119,7 +119,7 @@ class Force(DefaultForce):
             forces) > 20:
             force.forceType = ForceType.GATEKEEPER
         else:
-            if not self.brain.enemyCastle and not self.brain.defenceMode and len(forces) < FORCE_EXPLORER_NUM:
+            if not self.brain.enemyCastle and len(forces) < FORCE_EXPLORER_NUM:
                 force.forceType = ForceType.CASTLE_EXPLORER
             if self.brain.aStage.turnNum % GROUP_INTERVAL == 0:
                 if len(self.brain.forceUnit(self.brain.forces, ForceType.GATEKEEPER)) < 250:

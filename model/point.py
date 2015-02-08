@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
 class Point(object):
+    """
+    座標関連
+    """
     def __init__(self, x, y):
         self.x = x
         self.y = y

@@ -76,6 +76,9 @@ class Units:
 
 
     def rangeStrength(self, p1, p2):
+        """
+        あるポイントp1からp2までの自分の陣営の強さの合計
+        """
         p2.x = min(MAPSIZE - 1, p2.x)
         p2.y = min(MAPSIZE - 1, p2.y)
         s = self.strengthMap[p2.x][p2.y]
@@ -116,6 +119,9 @@ class Units:
         return strengthMap
 
     def weakestDirection(self, point):
+        """
+        4方向の中で１番自分陣営の攻撃力が弱いポイント
+        """
         directions = [Point(0, 1), Point(0, -1), Point(1, 0), Point(-1, 0)]
         d = min(directions, key=lambda d: self.damage(point.plus(d)))
         return point.plus(d)

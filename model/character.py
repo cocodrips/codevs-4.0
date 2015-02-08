@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 from codevs import *
 from point import Point
 import random
 
 
 class Character(object):
+    """
+    全てのユニットのクラス
+    """
     def __init__(self, cid, y, x, hp, type, forceType=ForceType.NEET, turn=0):
         self.cid = cid
         self.point = Point(x, y)

@@ -3,6 +3,10 @@ from codevs import *
 
 
 class Resource(object):
+    """
+    資源クラス
+    mother: この資源を守る担当の攻撃ユニット
+    """
     def __init__(self, point):
         self.workers = []
         self.planners = []
